@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:15
+    container_name: ecomm_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ecommuser
+      POSTGRES_PASSWORD: ecommpass123
+      POSTGRES_DB: ecomm_db
+    ports:
+      - '5433:5432' # Using 5433 to avoid conflict with your local PostgreSQL
+    volumes:
+      - ecomm_postgres_data:/var/lib/postgresql/data
+
+volumes:
+  ecomm_postgres_data:
