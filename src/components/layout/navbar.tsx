@@ -1,25 +1,28 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { useSession, signIn, signOut } from 'next-auth/react';
-import { ShoppingCart, User, Search, Menu, Gem } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import Link from "next/link";
+import { useSession, signIn, signOut } from "next-auth/react";
+import { ShoppingCart, Search, Menu, Gem } from "lucide-react";
+import { useSettings } from "@/contexts/settings-context";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useCartStore } from '@/store/cart-store';
-import { ThemeToggle } from '@/components/ui/theme-toggle';
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useCartStore } from "@/store/cart-store";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { ShopDropdown } from "./shop-dropdown";
 
 export function Navbar() {
   const { data: session } = useSession();
   const { getTotalItems, toggleCart } = useCartStore();
+  const { settings } = useSettings();
   const totalItems = getTotalItems();
 
   return (
@@ -28,7 +31,9 @@ export function Navbar() {
         {/* Logo */}
         <Link href="/" className="flex items-center space-x-2">
           <Gem className="h-6 w-6 text-gold-600" />
-          <span className="font-bold text-xl">FORGE & STEEL</span>
+          <span className="font-bold text-xl">
+            {settings?.siteName || "FORGE & STEEL"}
+          </span>
         </Link>
 
         {/* Desktop Navigation */}
@@ -39,12 +44,10 @@ export function Navbar() {
           >
             Home
           </Link>
-          <Link
-            href="/shop"
-            className="text-sm font-medium hover:text-accent transition-colors"
-          >
-            Shop
-          </Link>
+
+          {/* Shop Dropdown */}
+          <ShopDropdown />
+
           <Link
             href="/categories"
             className="text-sm font-medium hover:text-accent transition-colors"
@@ -107,11 +110,11 @@ export function Navbar() {
                 >
                   <Avatar className="h-8 w-8">
                     <AvatarImage
-                      src={session.user?.image || ''}
-                      alt={session.user?.name || ''}
+                      src={session.user?.image || ""}
+                      alt={session.user?.name || ""}
                     />
                     <AvatarFallback>
-                      {session.user?.name?.charAt(0) || 'U'}
+                      {session.user?.name?.charAt(0) || "U"}
                     </AvatarFallback>
                   </Avatar>
                 </Button>
@@ -136,7 +139,7 @@ export function Navbar() {
                 <DropdownMenuItem asChild>
                   <Link href="/orders">Orders</Link>
                 </DropdownMenuItem>
-                {session.user?.role === 'ADMIN' && (
+                {session.user?.role === "ADMIN" && (
                   <DropdownMenuItem asChild>
                     <Link href="/admin">Admin Dashboard</Link>
                   </DropdownMenuItem>

@@ -12,6 +12,7 @@ import {
   Settings,
   Gem,
 } from "lucide-react";
+import { useSettings } from "@/contexts/settings-context";
 
 const navigation = [
   { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
@@ -24,6 +25,7 @@ const navigation = [
 
 export function AdminSidebar() {
   const pathname = usePathname();
+  const { settings } = useSettings();
 
   return (
     <div className="w-64 bg-card border-r flex flex-col">
@@ -32,7 +34,9 @@ export function AdminSidebar() {
         <Link href="/admin" className="flex items-center space-x-2">
           <Gem className="h-8 w-8 text-accent" />
           <div>
-            <h1 className="font-bold text-lg">Forge & Steel</h1>
+            <h1 className="font-bold text-lg">
+              {settings?.siteName || "Forge & Steel"}
+            </h1>
             <p className="text-xs text-muted-foreground">Admin Panel</p>
           </div>
         </Link>

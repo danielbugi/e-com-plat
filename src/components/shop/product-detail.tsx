@@ -1,15 +1,15 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import Image from 'next/image';
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { ShoppingCart, Truck, Shield, ArrowLeft } from 'lucide-react';
-import { formatPrice } from '@/lib/utils';
-import { useCartStore } from '@/store/cart-store';
-import { toast } from 'react-hot-toast';
+import { useState } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { ShoppingCart, Truck, Shield, ArrowLeft } from "lucide-react";
+import { formatPrice, cn } from "@/lib/utils";
+import { useCartStore } from "@/store/cart-store";
+import { toast } from "react-hot-toast";
 
 interface ProductDetailProps {
   product: {
@@ -35,6 +35,7 @@ interface ProductDetailProps {
 
 export function ProductDetail({ product }: ProductDetailProps) {
   const [quantity, setQuantity] = useState(1);
+  const [selectedImage, setSelectedImage] = useState(product.image);
   const { addItem, toggleCart } = useCartStore();
 
   const handleAddToCart = () => {
@@ -56,6 +57,12 @@ export function ProductDetail({ product }: ProductDetailProps) {
       )
     : 0;
 
+  // Ensure main image is first in the array
+  const allImages =
+    product.images && product.images.length > 0
+      ? product.images
+      : [product.image];
+
   return (
     <div>
       {/* Back Button */}
@@ -68,20 +75,49 @@ export function ProductDetail({ product }: ProductDetailProps) {
       </Link>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-        {/* Product Image */}
-        <div className="relative aspect-square overflow-hidden rounded-lg bg-secondary">
-          <Image
-            src={product.image}
-            alt={product.name}
-            fill
-            className="object-cover"
-            priority
-            sizes="(max-width: 768px) 100vw, 50vw"
-          />
-          {discount > 0 && (
-            <Badge className="absolute top-4 left-4 bg-accent text-accent-foreground text-lg px-3 py-1">
-              Save {discount}%
-            </Badge>
+        {/* Product Images Gallery */}
+        <div className="space-y-4">
+          {/* Main Image */}
+          <div className="relative aspect-square overflow-hidden rounded-lg bg-secondary">
+            <Image
+              src={selectedImage}
+              alt={product.name}
+              fill
+              className="object-cover"
+              priority
+              sizes="(max-width: 768px) 100vw, 50vw"
+            />
+            {discount > 0 && (
+              <Badge className="absolute top-4 left-4 bg-accent text-accent-foreground text-lg px-3 py-1">
+                Save {discount}%
+              </Badge>
+            )}
+          </div>
+
+          {/* Thumbnail Images */}
+          {allImages.length > 1 && (
+            <div className="grid grid-cols-4 gap-4">
+              {allImages.map((image, index) => (
+                <button
+                  key={index}
+                  onClick={() => setSelectedImage(image)}
+                  className={cn(
+                    "relative aspect-square overflow-hidden rounded-lg border-2 transition-all",
+                    selectedImage === image
+                      ? "border-accent ring-2 ring-accent"
+                      : "border-border hover:border-accent/50"
+                  )}
+                >
+                  <Image
+                    src={image}
+                    alt={`${product.name} - Image ${index + 1}`}
+                    fill
+                    className="object-cover"
+                    sizes="100px"
+                  />
+                </button>
+              ))}
+            </div>
           )}
         </div>
 
@@ -156,7 +192,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
             disabled={!product.inStock}
           >
             <ShoppingCart className="mr-2 h-5 w-5" />
-            {product.inStock ? 'Add to Cart' : 'Out of Stock'}
+            {product.inStock ? "Add to Cart" : "Out of Stock"}
           </Button>
 
           {/* Product Features */}

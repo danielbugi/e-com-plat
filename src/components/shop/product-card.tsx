@@ -1,14 +1,14 @@
-'use client';
+"use client";
 
-import Image from 'next/image';
-import Link from 'next/link';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardFooter } from '@/components/ui/card';
-import { ShoppingCart } from 'lucide-react';
-import { formatPrice } from '@/lib/utils';
-import { useCartStore } from '@/store/cart-store';
-import { toast } from 'react-hot-toast';
+import Link from "next/link";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { ShoppingCart } from "lucide-react";
+import { formatPrice } from "@/lib/utils";
+import { useCartStore } from "@/store/cart-store";
+import { toast } from "react-hot-toast";
+import { ProductImageSlider } from "./product-image-slider";
 
 interface ProductCardProps {
   product: {
@@ -18,6 +18,7 @@ interface ProductCardProps {
     price: number;
     comparePrice: number | null;
     image: string;
+    images?: string[];
     inStock: boolean;
     freeShipping: boolean;
     category: {
@@ -38,7 +39,7 @@ export function ProductCard({ product }: ProductCardProps) {
       price: product.price,
       image: product.image,
     });
-    toast.success('Added to cart');
+    toast.success("Added to cart");
     toggleCart();
   };
 
@@ -48,27 +49,35 @@ export function ProductCard({ product }: ProductCardProps) {
       )
     : 0;
 
+  // Build display images array
+  // If images array exists and has items, use it. Otherwise, just use the main image
+  const displayImages =
+    product.images && product.images.length > 0
+      ? product.images
+      : [product.image];
+
+  console.log("Product:", product.name, "Images:", displayImages); // Debug log
+
   return (
     <Card className="group overflow-hidden border-border hover:shadow-lg transition-all duration-300">
       <Link href={`/shop/${product.slug}`}>
-        <div className="relative aspect-square overflow-hidden bg-secondary">
-          <Image
-            src={product.image}
-            alt={product.name}
-            fill
-            className="object-cover transition-transform duration-300 group-hover:scale-110"
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+        <div className="relative">
+          <ProductImageSlider
+            images={displayImages}
+            productName={product.name}
           />
-          {discount > 0 && (
-            <Badge className="absolute top-2 left-2 bg-accent text-accent-foreground">
-              -{discount}%
-            </Badge>
-          )}
-          {product.freeShipping && (
-            <Badge className="absolute top-2 right-2 bg-green-600 text-white">
-              Free Shipping
-            </Badge>
-          )}
+
+          {/* Badges */}
+          <div className="absolute top-2 left-2 flex flex-col gap-2 z-10">
+            {discount > 0 && (
+              <Badge className="bg-accent text-accent-foreground">
+                -{discount}%
+              </Badge>
+            )}
+            {product.freeShipping && (
+              <Badge className="bg-green-600 text-white">Free Shipping</Badge>
+            )}
+          </div>
         </div>
       </Link>
 
@@ -100,7 +109,7 @@ export function ProductCard({ product }: ProductCardProps) {
           disabled={!product.inStock}
         >
           <ShoppingCart className="mr-2 h-4 w-4" />
-          {product.inStock ? 'Add to Cart' : 'Out of Stock'}
+          {product.inStock ? "Add to Cart" : "Out of Stock"}
         </Button>
       </CardFooter>
     </Card>

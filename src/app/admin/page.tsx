@@ -25,7 +25,8 @@ async function getStats() {
         createdAt: "desc",
       },
       include: {
-        items: true,
+        orderItems: true, // Changed from 'items' to 'orderItems'
+        user: true, // Added user to get customer info
       },
     }),
   ]);
@@ -37,10 +38,9 @@ async function getStats() {
     totalCustomers,
     recentOrders: recentOrders.map((order) => ({
       ...order,
-      subtotal: order.subtotal.toNumber(),
-      tax: order.tax.toNumber(),
       total: order.total.toNumber(),
-      items: order.items.map((item) => ({
+      orderItems: order.orderItems.map((item) => ({
+        // Changed from 'items'
         ...item,
         price: item.price.toNumber(),
       })),
@@ -125,14 +125,12 @@ export default async function AdminDashboard() {
                   className="flex items-center justify-between border-b pb-4 last:border-0"
                 >
                   <div>
-                    <p className="font-medium">
-                      {order.firstName} {order.lastName}
-                    </p>
+                    <p className="font-medium">{order.user?.name || "Guest"}</p>
                     <p className="text-sm text-muted-foreground">
-                      {order.email}
+                      {order.user?.email}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {order.items.length} item(s)
+                      {order.orderItems.length} item(s)
                     </p>
                   </div>
                   <div className="text-right">

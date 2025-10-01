@@ -1,10 +1,22 @@
-import Link from 'next/link';
-import { Gem, Facebook, Instagram, Twitter, Mail } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+"use client";
+
+import Link from "next/link";
+import {
+  Gem,
+  Facebook,
+  Instagram,
+  Twitter,
+  Mail,
+  Phone,
+  MapPin,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useSettings } from "@/contexts/settings-context";
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
+  const { settings } = useSettings();
 
   return (
     <footer className="bg-gray-900 text-white">
@@ -14,14 +26,47 @@ export function Footer() {
           <div className="space-y-4">
             <div className="flex items-center space-x-2">
               <Gem className="h-6 w-6 text-gold-500" />
-              <span className="font-bold text-xl">FORGE & STEEL</span>
+              <span className="font-bold text-xl">
+                {settings?.siteName || "FORGE & STEEL"}
+              </span>
             </div>
             <p className="text-gray-400">
-              Premium handcrafted jewelry for the modern gentleman.
+              {settings?.siteDescription ||
+                "Premium handcrafted jewelry for the modern gentleman."}
             </p>
-            <p className="text-gray-400">
-              Premium plants and gardening supplies for your home and garden.
-            </p>
+
+            {/* Contact Info */}
+            <div className="space-y-2">
+              {settings?.contactEmail && (
+                <div className="flex items-center gap-2 text-gray-400 text-sm">
+                  <Mail className="h-4 w-4" />
+                  <a
+                    href={`mailto:${settings.contactEmail}`}
+                    className="hover:text-white transition-colors"
+                  >
+                    {settings.contactEmail}
+                  </a>
+                </div>
+              )}
+              {settings?.contactPhone && (
+                <div className="flex items-center gap-2 text-gray-400 text-sm">
+                  <Phone className="h-4 w-4" />
+                  <a
+                    href={`tel:${settings.contactPhone}`}
+                    className="hover:text-white transition-colors"
+                  >
+                    {settings.contactPhone}
+                  </a>
+                </div>
+              )}
+              {settings?.address && (
+                <div className="flex items-center gap-2 text-gray-400 text-sm">
+                  <MapPin className="h-4 w-4" />
+                  <span>{settings.address}</span>
+                </div>
+              )}
+            </div>
+
             <div className="flex space-x-4">
               <Button
                 size="icon"
@@ -137,7 +182,7 @@ export function Footer() {
                 placeholder="Enter your email"
                 className="bg-gray-800 border-gray-700 text-white"
               />
-              <Button className="bg-green-600 hover:bg-green-700">
+              <Button className="bg-accent hover:bg-accent/90">
                 <Mail className="h-4 w-4" />
               </Button>
             </div>
@@ -145,7 +190,10 @@ export function Footer() {
         </div>
 
         <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-          <p>&copy; {currentYear} GreenHouse. All rights reserved.</p>
+          <p>
+            &copy; {currentYear} {settings?.siteName || "Forge & Steel"}. All
+            rights reserved.
+          </p>
         </div>
       </div>
     </footer>
