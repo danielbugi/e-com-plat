@@ -1,19 +1,24 @@
-'use client';
+"use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { useCartStore } from '@/store/cart-store';
-import { formatPrice } from '@/lib/utils';
-import Image from 'next/image';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { useCartStore } from "@/store/cart-store";
+import { useSettings } from "@/contexts/settings-context";
+import Image from "next/image";
 
 export function OrderSummary() {
   const { items, getTotalPrice } = useCartStore();
-  const totalPrice = getTotalPrice();
+  const { settings } = useSettings();
+  const subtotal = getTotalPrice();
+  const taxRate = settings?.taxRate || 17;
+  const taxAmount = (subtotal * taxRate) / 100;
+  const total = subtotal + taxAmount;
+  const currencySymbol = settings?.currencySymbol || "₪";
 
   return (
     <Card className="sticky top-4">
       <CardHeader>
-        <CardTitle>Order Summary</CardTitle>
+        <CardTitle>סיכום הזמנה</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Cart Items */}
@@ -31,11 +36,12 @@ export function OrderSummary() {
               <div className="flex-1 min-w-0">
                 <p className="font-medium text-sm truncate">{item.name}</p>
                 <p className="text-sm text-muted-foreground">
-                  Qty: {item.quantity}
+                  כמות: {item.quantity}
                 </p>
               </div>
               <p className="font-medium text-sm">
-                {formatPrice(item.price * item.quantity)}
+                {currencySymbol}
+                {(item.price * item.quantity).toFixed(2)}
               </p>
             </div>
           ))}
@@ -46,23 +52,30 @@ export function OrderSummary() {
         {/* Price Breakdown */}
         <div className="space-y-2">
           <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Subtotal</span>
-            <span className="font-medium">{formatPrice(totalPrice)}</span>
-          </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Shipping</span>
-            <span className="font-medium text-green-600">Free</span>
-          </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Tax</span>
+            <span className="text-muted-foreground">סכום ביניים</span>
             <span className="font-medium">
-              {formatPrice(totalPrice * 0.17)}
+              {currencySymbol}
+              {subtotal.toFixed(2)}
+            </span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">משלוח</span>
+            <span className="font-medium text-green-600">חינם</span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">מע"מ ({taxRate}%)</span>
+            <span className="font-medium">
+              {currencySymbol}
+              {taxAmount.toFixed(2)}
             </span>
           </div>
           <Separator />
           <div className="flex justify-between text-lg font-bold">
-            <span>Total</span>
-            <span>{formatPrice(totalPrice * 1.17)}</span>
+            <span>סה"כ</span>
+            <span>
+              {currencySymbol}
+              {total.toFixed(2)}
+            </span>
           </div>
         </div>
       </CardContent>

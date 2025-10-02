@@ -1,9 +1,15 @@
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { CheckCircle } from 'lucide-react';
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { CheckCircle } from "lucide-react";
 
-export default function OrderConfirmationPage() {
+export default function OrderConfirmationPage({
+  searchParams,
+}: {
+  searchParams: { orderId?: string };
+}) {
+  const orderId = searchParams.orderId;
+
   return (
     <div className="min-h-screen bg-background">
       <section className="py-20">
@@ -13,38 +19,44 @@ export default function OrderConfirmationPage() {
               <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-green-100 mb-6">
                 <CheckCircle className="h-12 w-12 text-green-600" />
               </div>
-              <h1 className="text-4xl font-bold mb-4">Order Confirmed!</h1>
+              <h1 className="text-4xl font-bold mb-4">ההזמנה התקבלה!</h1>
+              {orderId && (
+                <p className="text-sm text-muted-foreground mb-2">
+                  מספר הזמנה: {orderId.slice(0, 8).toUpperCase()}
+                </p>
+              )}
               <p className="text-xl text-muted-foreground">
-                Thank you for your purchase. Your order has been received and is
-                being processed.
+                תודה על הרכישה. ההזמנה שלך התקבלה ומעובדת.
               </p>
             </div>
 
             <Card>
               <CardContent className="p-8">
-                <div className="space-y-4 text-left">
+                <div className="space-y-4 text-right">
                   <div>
-                    <h3 className="font-semibold mb-2">What's Next?</h3>
-                    <ul className="space-y-2 text-muted-foreground">
-                      <li className="flex items-start gap-2">
+                    <h3 className="font-semibold mb-4 text-right">מה הלאה?</h3>
+                    <ul className="space-y-3 text-muted-foreground">
+                      <li className="flex items-start gap-3">
                         <span className="text-green-600 mt-1">✓</span>
-                        <span>
-                          You'll receive an order confirmation email shortly
+                        <span className="text-right">
+                          תקבל/י אישור הזמנה בדוא"ל בקרוב
                         </span>
                       </li>
-                      <li className="flex items-start gap-2">
+                      <li className="flex items-start gap-3">
                         <span className="text-green-600 mt-1">✓</span>
-                        <span>
-                          We'll send you tracking information once your order
-                          ships
+                        <span className="text-right">
+                          נשלח אליך מידע מעקב ברגע שההזמנה תישלח
                         </span>
                       </li>
-                      <li className="flex items-start gap-2">
+                      <li className="flex items-start gap-3">
                         <span className="text-green-600 mt-1">✓</span>
-                        <span>
-                          Your jewelry will be carefully packaged and shipped
-                          within 2-3 business days
+                        <span className="text-right">
+                          התכשיט שלך יארז בקפידה וישלח תוך 2-3 ימי עסקים
                         </span>
+                      </li>
+                      <li className="flex items-start gap-3">
+                        <span className="text-green-600 mt-1">✓</span>
+                        <span className="text-right">משלוח חינם לכל הארץ</span>
                       </li>
                     </ul>
                   </div>
@@ -54,10 +66,10 @@ export default function OrderConfirmationPage() {
 
             <div className="mt-8 flex gap-4 justify-center">
               <Button size="lg" asChild>
-                <Link href="/shop">Continue Shopping</Link>
+                <Link href="/shop">המשך קניות</Link>
               </Button>
               <Button size="lg" variant="outline" asChild>
-                <Link href="/">Back to Home</Link>
+                <Link href="/">חזרה לדף הבית</Link>
               </Button>
             </div>
           </div>

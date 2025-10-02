@@ -1,14 +1,12 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Form,
   FormControl,
@@ -16,42 +14,49 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
-import { useCartStore } from '@/store/cart-store';
-import { toast } from 'react-hot-toast';
-import { useRouter } from 'next/navigation';
+} from "@/components/ui/form";
+import { useCartStore } from "@/store/cart-store";
+import { toast } from "react-hot-toast";
+import { useRouter } from "next/navigation";
+import { useSettings } from "@/contexts/settings-context";
 
 const checkoutSchema = z.object({
-  email: z.string().email('Invalid email address'),
-  firstName: z.string().min(2, 'First name is required'),
-  lastName: z.string().min(2, 'Last name is required'),
-  address: z.string().min(5, 'Address is required'),
-  city: z.string().min(2, 'City is required'),
-  postalCode: z.string().min(4, 'Postal code is required'),
-  phone: z.string().min(9, 'Phone number is required'),
-  paymentMethod: z.enum(['credit_card', 'paypal'], {
-    required_error: 'Please select a payment method',
-  }),
+  email: z.string().email('כתובת דוא"ל לא תקינה'),
+  firstName: z.string().min(2, "שם פרטי נדרש"),
+  lastName: z.string().min(2, "שם משפחה נדרש"),
+  phone: z.string().regex(/^05\d{8}$/, "מספר טלפון לא תקין (05X-XXX-XXXX)"),
+  address: z.string().min(5, "כתובת נדרשת"),
+  city: z.string().min(2, "עיר נדרשת"),
+  postalCode: z.string().min(5, "מיקוד נדרש").max(7, "מיקוד לא תקין"),
+  idNumber: z
+    .string()
+    .regex(/^\d{9}$/, "תעודת זהות לא תקינה (9 ספרות)")
+    .optional(),
 });
 
 type CheckoutFormValues = z.infer<typeof checkoutSchema>;
 
 export function CheckoutForm() {
   const [isLoading, setIsLoading] = useState(false);
-  const { items, clearCart } = useCartStore();
+  const { items, getTotalPrice, clearCart } = useCartStore();
+  const { settings } = useSettings();
   const router = useRouter();
+  const totalPrice = getTotalPrice();
+  const taxRate = settings?.taxRate || 17;
+  const taxAmount = (totalPrice * taxRate) / 100;
+  const finalTotal = totalPrice + taxAmount;
 
   const form = useForm<CheckoutFormValues>({
     resolver: zodResolver(checkoutSchema),
     defaultValues: {
-      email: '',
-      firstName: '',
-      lastName: '',
-      address: '',
-      city: '',
-      postalCode: '',
-      phone: '',
-      paymentMethod: 'credit_card',
+      email: "",
+      firstName: "",
+      lastName: "",
+      phone: "",
+      address: "",
+      city: "",
+      postalCode: "",
+      idNumber: "",
     },
   });
 
@@ -59,24 +64,49 @@ export function CheckoutForm() {
     setIsLoading(true);
 
     try {
-      // Simulate order processing
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-
-      // Here you would normally:
-      // 1. Create order in database
-      // 2. Process payment
-      // 3. Send confirmation email
-
-      console.log('Order data:', {
-        ...data,
-        items,
+      // Create order in database
+      const orderResponse = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          customerInfo: data,
+          items: items.map((item) => ({
+            productId: item.productId,
+            quantity: item.quantity,
+            price: item.price,
+          })),
+          subtotal: totalPrice,
+          tax: taxAmount,
+          total: finalTotal,
+        }),
       });
 
-      toast.success('Order placed successfully!');
-      clearCart();
-      router.push('/order-confirmation');
+      if (!orderResponse.ok) {
+        throw new Error("Failed to create order");
+      }
+
+      const { order } = await orderResponse.json();
+
+      // Redirect to Tranzila payment page
+      const tranzilaResponse = await fetch("/api/payment/tranzila", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderId: order.id,
+          amount: finalTotal,
+          customerName: `${data.firstName} ${data.lastName}`,
+          customerEmail: data.email,
+          customerPhone: data.phone,
+        }),
+      });
+
+      const { paymentUrl } = await tranzilaResponse.json();
+
+      // Redirect to Tranzila
+      window.location.href = paymentUrl;
     } catch (error) {
-      toast.error('Something went wrong. Please try again.');
+      console.error("Checkout error:", error);
+      toast.error("שגיאה בביצוע ההזמנה. אנא נסה שנית.");
     } finally {
       setIsLoading(false);
     }
@@ -88,7 +118,7 @@ export function CheckoutForm() {
         {/* Contact Information */}
         <Card>
           <CardHeader>
-            <CardTitle>Contact Information</CardTitle>
+            <CardTitle>פרטי קשר</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <FormField
@@ -96,9 +126,26 @@ export function CheckoutForm() {
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email</FormLabel>
+                  <FormLabel>דוא"ל</FormLabel>
                   <FormControl>
-                    <Input placeholder="you@example.com" {...field} />
+                    <Input
+                      type="email"
+                      placeholder="example@email.com"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="phone"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>טלפון נייד</FormLabel>
+                  <FormControl>
+                    <Input type="tel" placeholder="05X-XXX-XXXX" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -110,7 +157,7 @@ export function CheckoutForm() {
         {/* Shipping Information */}
         <Card>
           <CardHeader>
-            <CardTitle>Shipping Address</CardTitle>
+            <CardTitle>כתובת למשלוח</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -119,9 +166,9 @@ export function CheckoutForm() {
                 name="firstName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>First Name</FormLabel>
+                    <FormLabel>שם פרטי</FormLabel>
                     <FormControl>
-                      <Input placeholder="John" {...field} />
+                      <Input placeholder="דני" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -132,9 +179,9 @@ export function CheckoutForm() {
                 name="lastName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Last Name</FormLabel>
+                    <FormLabel>שם משפחה</FormLabel>
                     <FormControl>
-                      <Input placeholder="Doe" {...field} />
+                      <Input placeholder="כהן" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -147,9 +194,9 @@ export function CheckoutForm() {
               name="address"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Address</FormLabel>
+                  <FormLabel>כתובת</FormLabel>
                   <FormControl>
-                    <Input placeholder="123 Main St" {...field} />
+                    <Input placeholder="רחוב הרצל 123" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -162,9 +209,9 @@ export function CheckoutForm() {
                 name="city"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>City</FormLabel>
+                    <FormLabel>עיר</FormLabel>
                     <FormControl>
-                      <Input placeholder="Tel Aviv" {...field} />
+                      <Input placeholder="תל אביב" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -175,9 +222,9 @@ export function CheckoutForm() {
                 name="postalCode"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Postal Code</FormLabel>
+                    <FormLabel>מיקוד</FormLabel>
                     <FormControl>
-                      <Input placeholder="12345" {...field} />
+                      <Input placeholder="6473921" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -187,12 +234,12 @@ export function CheckoutForm() {
 
             <FormField
               control={form.control}
-              name="phone"
+              name="idNumber"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Phone</FormLabel>
+                  <FormLabel>תעודת זהות (אופציונלי)</FormLabel>
                   <FormControl>
-                    <Input placeholder="052-1234567" {...field} />
+                    <Input placeholder="123456789" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -201,41 +248,18 @@ export function CheckoutForm() {
           </CardContent>
         </Card>
 
-        {/* Payment Method */}
+        {/* Payment Info */}
         <Card>
           <CardHeader>
-            <CardTitle>Payment Method</CardTitle>
+            <CardTitle>תשלום</CardTitle>
           </CardHeader>
           <CardContent>
-            <FormField
-              control={form.control}
-              name="paymentMethod"
-              render={({ field }) => (
-                <FormItem className="space-y-3">
-                  <FormControl>
-                    <RadioGroup
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                      className="flex flex-col space-y-2"
-                    >
-                      <div className="flex items-center space-x-3 space-y-0 border rounded-lg p-4">
-                        <RadioGroupItem value="credit_card" />
-                        <Label className="font-normal cursor-pointer flex-1">
-                          Credit Card
-                        </Label>
-                      </div>
-                      <div className="flex items-center space-x-3 space-y-0 border rounded-lg p-4">
-                        <RadioGroupItem value="paypal" />
-                        <Label className="font-normal cursor-pointer flex-1">
-                          PayPal
-                        </Label>
-                      </div>
-                    </RadioGroup>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="bg-muted p-4 rounded-lg space-y-2">
+              <p className="text-sm">תשלום מאובטח באמצעות Tranzila</p>
+              <p className="text-xs text-muted-foreground">
+                לאחר לחיצה על "המשך לתשלום" תועבר/י לדף תשלום מאובטח
+              </p>
+            </div>
           </CardContent>
         </Card>
 
@@ -243,9 +267,13 @@ export function CheckoutForm() {
           type="submit"
           size="lg"
           className="w-full bg-accent hover:bg-accent/90 text-accent-foreground"
-          disabled={isLoading}
+          disabled={isLoading || items.length === 0}
         >
-          {isLoading ? 'Processing...' : 'Place Order'}
+          {isLoading
+            ? "מעבד..."
+            : `המשך לתשלום (${settings?.currencySymbol}${finalTotal.toFixed(
+                2
+              )})`}
         </Button>
       </form>
     </Form>
