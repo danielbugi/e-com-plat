@@ -16,18 +16,27 @@ import { useLanguage } from "@/contexts/language-context";
 interface Category {
   id: string;
   name: string;
+  nameEn?: string | null;
+  nameHe?: string | null;
   slug: string;
 }
 
 export function ShopDropdown() {
   const [categories, setCategories] = useState<Category[]>([]);
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   useEffect(() => {
     fetch("/api/categories")
       .then((res) => res.json())
       .then((data) => setCategories(data.slice(0, 5)));
   }, []);
+
+  const getCategoryName = (category: Category) => {
+    if (language === "he") {
+      return category.nameHe || category.nameEn || category.name;
+    }
+    return category.nameEn || category.name;
+  };
 
   return (
     <DropdownMenu>
@@ -49,7 +58,7 @@ export function ShopDropdown() {
         {categories.map((category) => (
           <DropdownMenuItem key={category.id} asChild>
             <Link href={`/shop?category=${category.slug}`}>
-              {category.name}
+              {getCategoryName(category)}
             </Link>
           </DropdownMenuItem>
         ))}

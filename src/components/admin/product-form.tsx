@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -16,6 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ImageUpload } from "@/components/admin/image-upload";
 import toast from "react-hot-toast";
 
 interface Category {
@@ -26,9 +27,11 @@ interface Category {
 }
 
 interface ProductFormProps {
-  product?: {
+  categories: Category[];
+  initialData?: {
     id: string;
     name: string;
+    slug: string;
     nameEn?: string | null;
     nameHe?: string | null;
     description?: string | null;
@@ -41,44 +44,69 @@ interface ProductFormProps {
     inStock: boolean;
     featured: boolean;
   };
+  productId?: string;
 }
 
-export function ProductForm({ product }: ProductFormProps) {
+export function ProductForm({
+  categories,
+  initialData,
+  productId,
+}: ProductFormProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-  const [categories, setCategories] = useState<Category[]>([]);
 
   // English fields
-  const [nameEn, setNameEn] = useState(product?.nameEn || product?.name || "");
+  const [nameEn, setNameEn] = useState(
+    initialData?.nameEn || initialData?.name || ""
+  );
   const [descriptionEn, setDescriptionEn] = useState(
-    product?.descriptionEn || product?.description || ""
+    initialData?.descriptionEn || initialData?.description || ""
   );
 
   // Hebrew fields
-  const [nameHe, setNameHe] = useState(product?.nameHe || "");
+  const [nameHe, setNameHe] = useState(initialData?.nameHe || "");
   const [descriptionHe, setDescriptionHe] = useState(
-    product?.descriptionHe || ""
+    initialData?.descriptionHe || ""
   );
 
   // Common fields
-  const [price, setPrice] = useState(product?.price?.toString() || "");
-  const [image, setImage] = useState(product?.image || "");
-  const [images, setImages] = useState(product?.images?.join("\n") || "");
-  const [categoryId, setCategoryId] = useState(product?.categoryId || "");
-  const [inStock, setInStock] = useState(product?.inStock ?? true);
-  const [featured, setFeatured] = useState(product?.featured ?? false);
+  const [price, setPrice] = useState(initialData?.price?.toString() || "");
+  const [slug, setSlug] = useState(initialData?.slug || "");
+  const [categoryId, setCategoryId] = useState(initialData?.categoryId || "");
+  const [inStock, setInStock] = useState(initialData?.inStock ?? true);
+  const [featured, setFeatured] = useState(initialData?.featured ?? false);
 
-  useEffect(() => {
-    fetch("/api/categories")
-      .then((res) => res.json())
-      .then((data) => setCategories(data));
-  }, []);
+  // Image management
+  const [images, setImages] = useState<string[]>(initialData?.images || []);
+  const [mainImage, setMainImage] = useState<string>(initialData?.image || "");
+
+  // Auto-generate slug from English name
+  const generateSlug = (name: string) => {
+    return name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)/g, "");
+  };
+
+  const handleNameEnChange = (value: string) => {
+    setNameEn(value);
+    // Only auto-generate slug for new products
+    if (!productId) {
+      setSlug(generateSlug(value));
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Validation
     if (!nameEn || !nameHe) {
       toast.error("Please provide both English and Hebrew names");
+      return;
+    }
+
+    if (!slug) {
+      toast.error("Slug is required");
       return;
     }
 
@@ -87,35 +115,40 @@ export function ProductForm({ product }: ProductFormProps) {
       return;
     }
 
+    if (!mainImage) {
+      toast.error("Please upload at least one image");
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      const url = product
-        ? `/api/admin/products/${product.id}`
+      const url = productId
+        ? `/api/admin/products/${productId}`
         : "/api/admin/products";
 
-      const imagesArray = images
-        .split("\n")
-        .map((img) => img.trim())
-        .filter((img) => img.length > 0);
+      const payload = {
+        name: nameEn,
+        nameEn,
+        nameHe,
+        slug,
+        description: descriptionEn || "",
+        descriptionEn: descriptionEn || "",
+        descriptionHe: descriptionHe || "",
+        price: parseFloat(price),
+        image: mainImage,
+        images: images,
+        categoryId,
+        inStock,
+        featured,
+      };
+
+      console.log("Sending payload:", payload);
 
       const response = await fetch(url, {
-        method: product ? "PUT" : "POST",
+        method: productId ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: nameEn, // Keep for backward compatibility
-          nameEn,
-          nameHe,
-          description: descriptionEn, // Keep for backward compatibility
-          descriptionEn,
-          descriptionHe,
-          price: parseFloat(price),
-          image,
-          images: imagesArray,
-          categoryId,
-          inStock,
-          featured,
-        }),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
@@ -124,7 +157,7 @@ export function ProductForm({ product }: ProductFormProps) {
       }
 
       toast.success(
-        product
+        productId
           ? "Product updated successfully"
           : "Product created successfully"
       );
@@ -141,7 +174,7 @@ export function ProductForm({ product }: ProductFormProps) {
     <form onSubmit={handleSubmit}>
       <Card>
         <CardHeader>
-          <CardTitle>{product ? "Edit Product" : "Create Product"}</CardTitle>
+          <CardTitle>{productId ? "Edit Product" : "Create Product"}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           <Tabs defaultValue="en" className="w-full">
@@ -159,10 +192,26 @@ export function ProductForm({ product }: ProductFormProps) {
                 <Input
                   id="nameEn"
                   value={nameEn}
-                  onChange={(e) => setNameEn(e.target.value)}
+                  onChange={(e) => handleNameEnChange(e.target.value)}
                   placeholder="Sterling Silver Ring"
                   required
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="slug">
+                  Slug <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="slug"
+                  value={slug}
+                  onChange={(e) => setSlug(e.target.value)}
+                  placeholder="sterling-silver-ring"
+                  required
+                />
+                <p className="text-xs text-muted-foreground">
+                  URL-friendly name (auto-generated from product name)
+                </p>
               </div>
 
               <div className="space-y-2">
@@ -243,34 +292,16 @@ export function ProductForm({ product }: ProductFormProps) {
             </div>
           </div>
 
+          {/* Image Upload Section */}
           <div className="space-y-2">
-            <Label htmlFor="image">
-              Main Image URL <span className="text-red-500">*</span>
+            <Label>
+              Product Images <span className="text-red-500">*</span>
             </Label>
-            <Input
-              id="image"
-              value={image}
-              onChange={(e) => setImage(e.target.value)}
-              placeholder="/images/products/ring-1.jpg"
-              required
-            />
-            {image && (
-              <img
-                src={image}
-                alt="Preview"
-                className="mt-2 w-32 h-32 object-cover rounded"
-              />
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="images">Additional Images (one per line)</Label>
-            <Textarea
-              id="images"
-              value={images}
-              onChange={(e) => setImages(e.target.value)}
-              placeholder="/images/products/ring-1.jpg&#10;/images/products/ring-2.jpg"
-              rows={4}
+            <ImageUpload
+              images={images}
+              mainImage={mainImage}
+              onImagesChange={setImages}
+              onMainImageChange={setMainImage}
             />
           </div>
 
@@ -298,7 +329,7 @@ export function ProductForm({ product }: ProductFormProps) {
             <Button type="submit" disabled={isLoading}>
               {isLoading
                 ? "Saving..."
-                : product
+                : productId
                 ? "Update Product"
                 : "Create Product"}
             </Button>

@@ -13,10 +13,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useSettings } from "@/contexts/settings-context";
+import { useLanguage } from "@/contexts/language-context";
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
   const { settings } = useSettings();
+  const { t, language } = useLanguage();
 
   return (
     <footer className="bg-gray-900 text-white">
@@ -31,8 +33,7 @@ export function Footer() {
               </span>
             </div>
             <p className="text-gray-400">
-              {settings?.siteDescription ||
-                "Premium handcrafted jewelry for the modern gentleman."}
+              {settings?.siteDescription || t("footer.description")}
             </p>
 
             {/* Contact Info */}
@@ -94,14 +95,14 @@ export function Footer() {
 
           {/* Quick Links */}
           <div className="space-y-4">
-            <h3 className="font-semibold">Quick Links</h3>
+            <h3 className="font-semibold">{t("footer.quickLinks")}</h3>
             <ul className="space-y-2 text-gray-400">
               <li>
                 <Link
                   href="/shop"
                   className="hover:text-white transition-colors"
                 >
-                  Shop All
+                  {t("footer.shopAll")}
                 </Link>
               </li>
               <li>
@@ -109,7 +110,7 @@ export function Footer() {
                   href="/categories"
                   className="hover:text-white transition-colors"
                 >
-                  Categories
+                  {t("footer.categories")}
                 </Link>
               </li>
               <li>
@@ -117,7 +118,7 @@ export function Footer() {
                   href="/about"
                   className="hover:text-white transition-colors"
                 >
-                  About Us
+                  {t("footer.aboutUs")}
                 </Link>
               </li>
               <li>
@@ -125,7 +126,7 @@ export function Footer() {
                   href="/contact"
                   className="hover:text-white transition-colors"
                 >
-                  Contact
+                  {t("footer.contact")}
                 </Link>
               </li>
             </ul>
@@ -133,38 +134,38 @@ export function Footer() {
 
           {/* Customer Service */}
           <div className="space-y-4">
-            <h3 className="font-semibold">Customer Service</h3>
+            <h3 className="font-semibold">{t("footer.customerService")}</h3>
             <ul className="space-y-2 text-gray-400">
-              <li>
-                <Link
-                  href="/shipping"
-                  className="hover:text-white transition-colors"
-                >
-                  Shipping Info
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/returns"
-                  className="hover:text-white transition-colors"
-                >
-                  Returns
-                </Link>
-              </li>
               <li>
                 <Link
                   href="/faq"
                   className="hover:text-white transition-colors"
                 >
-                  FAQ
+                  {t("footer.faq")}
                 </Link>
               </li>
               <li>
                 <Link
-                  href="/support"
+                  href="/shipping"
                   className="hover:text-white transition-colors"
                 >
-                  Support
+                  {language === "he" ? "משלוחים והחזרות" : "Shipping & Returns"}
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/privacy"
+                  className="hover:text-white transition-colors"
+                >
+                  {language === "he" ? "מדיניות פרטיות" : "Privacy Policy"}
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/terms"
+                  className="hover:text-white transition-colors"
+                >
+                  {language === "he" ? "תנאי שימוש" : "Terms of Service"}
                 </Link>
               </li>
             </ul>
@@ -172,14 +173,12 @@ export function Footer() {
 
           {/* Newsletter */}
           <div className="space-y-4">
-            <h3 className="font-semibold">Newsletter</h3>
-            <p className="text-gray-400">
-              Subscribe for updates and exclusive offers
-            </p>
+            <h3 className="font-semibold">{t("footer.newsletter")}</h3>
+            <p className="text-gray-400">{t("footer.newsletterDesc")}</p>
             <div className="flex space-x-2">
               <Input
                 type="email"
-                placeholder="Enter your email"
+                placeholder={t("footer.emailPlaceholder")}
                 className="bg-gray-800 border-gray-700 text-white"
               />
               <Button className="bg-accent hover:bg-accent/90">
@@ -191,8 +190,8 @@ export function Footer() {
 
         <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
           <p>
-            &copy; {currentYear} {settings?.siteName || "Forge & Steel"}. All
-            rights reserved.
+            &copy; {currentYear} {settings?.siteName || "Forge & Steel"}.{" "}
+            {t("footer.allRightsReserved")}.
           </p>
         </div>
       </div>

@@ -8,10 +8,11 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ImageUpload } from "@/components/admin/image-upload";
 import toast from "react-hot-toast";
 
 interface CategoryFormProps {
-  category?: {
+  initialData?: {
     id: string;
     name: string;
     nameEn?: string | null;
@@ -20,20 +21,31 @@ interface CategoryFormProps {
     description?: string | null;
     image?: string | null;
   };
+  categoryId?: string;
 }
 
-export function CategoryForm({ category }: CategoryFormProps) {
+export function CategoryForm({ initialData, categoryId }: CategoryFormProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
   // English fields
-  const [nameEn, setNameEn] = useState(category?.nameEn || "");
-  const [slug, setSlug] = useState(category?.slug || "");
-  const [description, setDescription] = useState(category?.description || "");
-  const [image, setImage] = useState(category?.image || "");
+  const [nameEn, setNameEn] = useState(initialData?.nameEn || "");
+  const [slug, setSlug] = useState(initialData?.slug || "");
+  const [descriptionEn, setDescriptionEn] = useState(
+    initialData?.description || ""
+  );
 
   // Hebrew fields
-  const [nameHe, setNameHe] = useState(category?.nameHe || "");
+  const [nameHe, setNameHe] = useState(initialData?.nameHe || "");
+  const [descriptionHe, setDescriptionHe] = useState(
+    initialData?.description || ""
+  );
+
+  // Image management - using array for compatibility with ImageUpload component
+  const [images, setImages] = useState<string[]>(
+    initialData?.image ? [initialData.image] : []
+  );
+  const [mainImage, setMainImage] = useState<string>(initialData?.image || "");
 
   // Auto-generate slug from English name
   const generateSlug = (name: string) => {
@@ -45,7 +57,7 @@ export function CategoryForm({ category }: CategoryFormProps) {
 
   const handleNameEnChange = (value: string) => {
     setNameEn(value);
-    if (!category) {
+    if (!categoryId) {
       setSlug(generateSlug(value));
     }
   };
@@ -66,20 +78,22 @@ export function CategoryForm({ category }: CategoryFormProps) {
     setIsLoading(true);
 
     try {
-      const url = category
-        ? `/api/admin/categories/${category.id}`
+      const url = categoryId
+        ? `/api/admin/categories/${categoryId}`
         : "/api/admin/categories";
 
       const response = await fetch(url, {
-        method: category ? "PUT" : "POST",
+        method: categoryId ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name: nameEn, // Keep for backward compatibility
+          name: nameEn,
           nameEn,
           nameHe,
           slug,
-          description,
-          image,
+          description: descriptionEn || "",
+          descriptionEn: descriptionEn || "",
+          descriptionHe: descriptionHe || "",
+          image: mainImage || null,
         }),
       });
 
@@ -89,7 +103,7 @@ export function CategoryForm({ category }: CategoryFormProps) {
       }
 
       toast.success(
-        category
+        categoryId
           ? "Category updated successfully"
           : "Category created successfully"
       );
@@ -107,7 +121,7 @@ export function CategoryForm({ category }: CategoryFormProps) {
       <Card>
         <CardHeader>
           <CardTitle>
-            {category ? "Edit Category" : "Create Category"}
+            {categoryId ? "Edit Category" : "Create Category"}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -150,11 +164,11 @@ export function CategoryForm({ category }: CategoryFormProps) {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="description">Description (English)</Label>
+                <Label htmlFor="descriptionEn">Description (English)</Label>
                 <Textarea
-                  id="description"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
+                  id="descriptionEn"
+                  value={descriptionEn}
+                  onChange={(e) => setDescriptionEn(e.target.value)}
                   placeholder="Handcrafted rings for every occasion"
                   rows={3}
                 />
@@ -181,8 +195,8 @@ export function CategoryForm({ category }: CategoryFormProps) {
                 <Label htmlFor="descriptionHe">תיאור (עברית)</Label>
                 <Textarea
                   id="descriptionHe"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
+                  value={descriptionHe}
+                  onChange={(e) => setDescriptionHe(e.target.value)}
                   placeholder="טבעות בעבודת יד לכל אירוע"
                   rows={3}
                   dir="rtl"
@@ -191,29 +205,25 @@ export function CategoryForm({ category }: CategoryFormProps) {
             </TabsContent>
           </Tabs>
 
-          {/* Common Fields */}
+          {/* Image Upload Section */}
           <div className="space-y-2">
-            <Label htmlFor="image">Image URL</Label>
-            <Input
-              id="image"
-              value={image}
-              onChange={(e) => setImage(e.target.value)}
-              placeholder="/images/categories/rings.jpg"
+            <Label>Category Image</Label>
+            <p className="text-sm text-muted-foreground mb-2">
+              Upload a single image for this category
+            </p>
+            <ImageUpload
+              images={images}
+              mainImage={mainImage}
+              onImagesChange={setImages}
+              onMainImageChange={setMainImage}
             />
-            {image && (
-              <img
-                src={image}
-                alt="Preview"
-                className="mt-2 w-32 h-32 object-cover rounded"
-              />
-            )}
           </div>
 
           <div className="flex gap-4">
             <Button type="submit" disabled={isLoading}>
               {isLoading
                 ? "Saving..."
-                : category
+                : categoryId
                 ? "Update Category"
                 : "Create Category"}
             </Button>

@@ -35,6 +35,7 @@ export async function POST(request: NextRequest) {
       name,
       nameEn,
       nameHe,
+      slug,
       description,
       descriptionEn,
       descriptionHe,
@@ -46,10 +47,41 @@ export async function POST(request: NextRequest) {
       featured,
     } = body;
 
+    console.log("Received product data:", {
+      nameEn,
+      nameHe,
+      slug,
+      price,
+      categoryId,
+      image,
+      hasImages: !!images,
+    });
+
     // Validate required fields
-    if (!nameEn || !nameHe || !price || !categoryId || !image) {
+    const missingFields = [];
+    if (!nameEn) missingFields.push("nameEn");
+    if (!nameHe) missingFields.push("nameHe");
+    if (!slug) missingFields.push("slug");
+    if (!price) missingFields.push("price");
+    if (!categoryId) missingFields.push("categoryId");
+    if (!image) missingFields.push("image");
+
+    if (missingFields.length > 0) {
+      console.error("Missing required fields:", missingFields);
       return NextResponse.json(
-        { error: "Missing required fields" },
+        { error: `Missing required fields: ${missingFields.join(", ")}` },
+        { status: 400 }
+      );
+    }
+
+    // Check if slug already exists
+    const existingProduct = await prisma.product.findUnique({
+      where: { slug },
+    });
+
+    if (existingProduct) {
+      return NextResponse.json(
+        { error: "A product with this slug already exists" },
         { status: 400 }
       );
     }
@@ -59,6 +91,7 @@ export async function POST(request: NextRequest) {
         name: name || nameEn, // Fallback for compatibility
         nameEn,
         nameHe,
+        slug,
         description: description || descriptionEn,
         descriptionEn,
         descriptionHe,

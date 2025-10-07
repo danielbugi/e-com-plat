@@ -43,6 +43,7 @@ export async function PUT(
       name,
       nameEn,
       nameHe,
+      slug,
       description,
       descriptionEn,
       descriptionHe,
@@ -63,12 +64,27 @@ export async function PUT(
       return NextResponse.json({ error: "Product not found" }, { status: 404 });
     }
 
+    // Check if slug is being changed and if it's already taken
+    if (slug && slug !== existingProduct.slug) {
+      const slugExists = await prisma.product.findUnique({
+        where: { slug },
+      });
+
+      if (slugExists) {
+        return NextResponse.json(
+          { error: "Slug already exists" },
+          { status: 400 }
+        );
+      }
+    }
+
     const product = await prisma.product.update({
       where: { id: params.id },
       data: {
         name: name || nameEn, // Fallback for compatibility
         nameEn,
         nameHe,
+        slug,
         description: description || descriptionEn,
         descriptionEn,
         descriptionHe,

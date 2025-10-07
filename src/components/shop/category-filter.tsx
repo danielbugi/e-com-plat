@@ -1,13 +1,16 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { cn } from '@/lib/utils';
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
+import { useLanguage } from "@/contexts/language-context";
 
 interface Category {
   id: string;
   name: string;
+  nameEn?: string | null;
+  nameHe?: string | null;
   slug: string;
 }
 
@@ -17,37 +20,45 @@ interface CategoryFilterProps {
 
 export function CategoryFilter({ categories }: CategoryFilterProps) {
   const searchParams = useSearchParams();
-  const activeCategory = searchParams.get('category');
+  const activeCategory = searchParams.get("category");
+  const { t, language } = useLanguage();
+
+  const getCategoryName = (category: Category) => {
+    if (language === "he") {
+      return category.nameHe || category.nameEn || category.name;
+    }
+    return category.nameEn || category.name;
+  };
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Categories</CardTitle>
+        <CardTitle>{t("shop.categories")}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-2">
         <Link
           href="/shop"
           className={cn(
-            'block py-2 px-3 rounded-md transition-colors',
+            "block py-2 px-3 rounded-md transition-colors",
             !activeCategory
-              ? 'bg-accent text-accent-foreground'
-              : 'hover:bg-secondary'
+              ? "bg-accent text-accent-foreground"
+              : "hover:bg-secondary"
           )}
         >
-          All Products
+          {t("shop.allProducts")}
         </Link>
         {categories.map((category) => (
           <Link
             key={category.id}
             href={`/shop?category=${category.slug}`}
             className={cn(
-              'block py-2 px-3 rounded-md transition-colors',
+              "block py-2 px-3 rounded-md transition-colors",
               activeCategory === category.slug
-                ? 'bg-accent text-accent-foreground'
-                : 'hover:bg-secondary'
+                ? "bg-accent text-accent-foreground"
+                : "hover:bg-secondary"
             )}
           >
-            {category.name}
+            {getCategoryName(category)}
           </Link>
         ))}
       </CardContent>

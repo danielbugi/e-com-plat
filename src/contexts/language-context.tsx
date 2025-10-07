@@ -57,20 +57,14 @@ const translations = {
     "auth.alreadyHaveAccount": "Already have an account?",
     "auth.dontHaveAccount": "Don't have an account?",
 
-    // Footer
-    "footer.companyInfo": "Company Info",
-    "footer.description":
-      "Premium handcrafted jewelry for the modern gentleman.",
+    // Footer (update existing)
     "footer.quickLinks": "Quick Links",
     "footer.shopAll": "Shop All",
     "footer.categories": "Categories",
     "footer.aboutUs": "About Us",
     "footer.contact": "Contact",
     "footer.customerService": "Customer Service",
-    "footer.shipping": "Shipping Info",
-    "footer.returns": "Returns",
     "footer.faq": "FAQ",
-    "footer.support": "Support",
     "footer.newsletter": "Newsletter",
     "footer.newsletterDesc": "Subscribe for updates and exclusive offers",
     "footer.emailPlaceholder": "Enter your email",
@@ -87,6 +81,8 @@ const translations = {
     "shop.popular": "Popular",
     "shop.noProducts": "No products found",
     "shop.noProductsDesc": "Try adjusting your filters",
+    "shop.categories": "Categories",
+    "shop.allProducts": "All Products",
 
     // Product
     "product.addToCart": "Add to Cart",
@@ -181,6 +177,31 @@ const translations = {
     "common.confirm": "Confirm",
     "common.yes": "Yes",
     "common.no": "No",
+
+    // Search
+    "search.resultsFor": "Search Results for",
+    "search.allProducts": "All Products",
+    "search.productsFound": "products found",
+    "search.noResults": "No products found",
+    "search.tryDifferent": "Try adjusting your search or filters",
+    "search.filters": "Filters",
+    "search.category": "Category",
+    "search.allCategories": "All Categories",
+    "search.priceRange": "Price Range",
+    "search.minPrice": "Min Price",
+    "search.maxPrice": "Max Price",
+    "search.availability": "Availability",
+    "search.inStockOnly": "In Stock Only",
+    "search.featuredOnly": "Featured Only",
+    "search.applyFilters": "Apply Filters",
+    "search.clearFilters": "Clear Filters",
+    "search.sortBy": "Sort by",
+    "search.newest": "Newest First",
+    "search.oldest": "Oldest First",
+    "search.priceLowToHigh": "Price: Low to High",
+    "search.priceHighToLow": "Price: High to Low",
+    "search.nameAZ": "Name: A-Z",
+    "search.nameZA": "Name: Z-A",
   },
   he: {
     // Navbar
@@ -197,11 +218,6 @@ const translations = {
     "nav.wishlist": "מועדפים",
     "nav.admin": "ניהול",
     "nav.signout": "התנתק",
-
-    // Shop Dropdown (add these)
-    "shop.dropdown.title": "קנה לפי קטגוריה",
-    "shop.dropdown.viewAll": "כל המוצרים",
-    "shop.dropdown.featured": "קטגוריות מומלצות",
 
     // Auth Modal
     "auth.welcome": "ברוכים הבאים לפורג' אנד סטיל",
@@ -221,19 +237,14 @@ const translations = {
     "auth.alreadyHaveAccount": "כבר יש לך חשבון?",
     "auth.dontHaveAccount": "אין לך חשבון?",
 
-    // Footer
-    "footer.companyInfo": "מידע על החברה",
-    "footer.description": "תכשיטים יוקרתיים בעבודת יד לגבר המודרני.",
+    // Footer (update existing)
     "footer.quickLinks": "קישורים מהירים",
     "footer.shopAll": "כל המוצרים",
     "footer.categories": "קטגוריות",
     "footer.aboutUs": "אודות",
     "footer.contact": "צור קשר",
     "footer.customerService": "שירות לקוחות",
-    "footer.shipping": "משלוחים",
-    "footer.returns": "החזרות",
     "footer.faq": "שאלות נפוצות",
-    "footer.support": "תמיכה",
     "footer.newsletter": "ניוזלטר",
     "footer.newsletterDesc": "הירשם לעדכונים והצעות בלעדיות",
     "footer.emailPlaceholder": 'הזן דוא"ל',
@@ -250,6 +261,13 @@ const translations = {
     "shop.popular": "פופולרי",
     "shop.noProducts": "לא נמצאו מוצרים",
     "shop.noProductsDesc": "נסה לשנות את הפילטרים",
+    "shop.categories": "קטגוריות",
+    "shop.allProducts": "כל המוצרים",
+
+    // Shop Dropdown (add these)
+    "shop.dropdown.title": "קנה לפי קטגוריה",
+    "shop.dropdown.viewAll": "כל המוצרים",
+    "shop.dropdown.featured": "קטגוריות מומלצות",
 
     // Product
     "product.addToCart": "הוסף לעגלה",
@@ -344,6 +362,31 @@ const translations = {
     "common.confirm": "אשר",
     "common.yes": "כן",
     "common.no": "לא",
+
+    // Search
+    "search.resultsFor": "תוצאות חיפוש עבור",
+    "search.allProducts": "כל המוצרים",
+    "search.productsFound": "מוצרים נמצאו",
+    "search.noResults": "לא נמצאו מוצרים",
+    "search.tryDifferent": "נסה לשנות את החיפוש או הפילטרים",
+    "search.filters": "סינון",
+    "search.category": "קטגוריה",
+    "search.allCategories": "כל הקטגוריות",
+    "search.priceRange": "טווח מחירים",
+    "search.minPrice": "מחיר מינימום",
+    "search.maxPrice": "מחיר מקסימום",
+    "search.availability": "זמינות",
+    "search.inStockOnly": "במלאי בלבד",
+    "search.featuredOnly": "מומלצים בלבד",
+    "search.applyFilters": "החל סינון",
+    "search.clearFilters": "נקה סינון",
+    "search.sortBy": "מיין לפי",
+    "search.newest": "החדשים ביותר",
+    "search.oldest": "הישנים ביותר",
+    "search.priceLowToHigh": "מחיר: נמוך לגבוה",
+    "search.priceHighToLow": "מחיר: גבוה לנמוך",
+    "search.nameAZ": "שם: א-ת",
+    "search.nameZA": "שם: ת-א",
   },
 };
 
