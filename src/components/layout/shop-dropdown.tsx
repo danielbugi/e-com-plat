@@ -3,63 +3,63 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { ChevronDown } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/contexts/language-context";
 
 interface Category {
   id: string;
   name: string;
   slug: string;
-  image?: string;
 }
 
 export function ShopDropdown() {
   const [categories, setCategories] = useState<Category[]>([]);
-  const [isOpen, setIsOpen] = useState(false);
+  const { t } = useLanguage();
 
   useEffect(() => {
     fetch("/api/categories")
       .then((res) => res.json())
-      .then((data) => setCategories(data.categories))
-      .catch((err) => console.error("Failed to fetch categories:", err));
+      .then((data) => setCategories(data.slice(0, 5)));
   }, []);
 
   return (
-    <div
-      className="relative"
-      onMouseEnter={() => setIsOpen(true)}
-      onMouseLeave={() => setIsOpen(false)}
-    >
-      <Link
-        href="/shop"
-        className="text-sm font-medium hover:text-accent transition-colors flex items-center gap-1 py-2"
-      >
-        Shop
-        <ChevronDown className="h-3 w-3" />
-      </Link>
-
-      {isOpen && categories.length > 0 && (
-        <div className="absolute top-full left-0 pt-2">
-          <div className="bg-popover border rounded-md shadow-lg w-56">
-            <div className="py-2">
-              <Link
-                href="/shop"
-                className="block px-4 py-2 text-sm hover:bg-accent hover:text-accent-foreground transition-colors"
-              >
-                All Products
-              </Link>
-              <div className="border-t my-2"></div>
-              {categories.map((category) => (
-                <Link
-                  key={category.id}
-                  href={`/shop?category=${category.slug}`}
-                  className="block px-4 py-2 text-sm hover:bg-accent hover:text-accent-foreground transition-colors"
-                >
-                  {category.name}
-                </Link>
-              ))}
-            </div>
-          </div>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          className="gap-1 text-sm font-medium"
+          aria-label={t("nav.shop")}
+        >
+          {t("nav.shop")}
+          <ChevronDown className="h-4 w-4" aria-hidden="true" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="w-56">
+        <div className="px-2 py-1.5 text-sm font-semibold">
+          {t("shop.dropdown.featured")}
         </div>
-      )}
-    </div>
+        <DropdownMenuSeparator />
+        {categories.map((category) => (
+          <DropdownMenuItem key={category.id} asChild>
+            <Link href={`/shop?category=${category.slug}`}>
+              {category.name}
+            </Link>
+          </DropdownMenuItem>
+        ))}
+        <DropdownMenuSeparator />
+        <DropdownMenuItem asChild>
+          <Link href="/shop" className="font-medium">
+            {t("shop.dropdown.viewAll")}
+          </Link>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

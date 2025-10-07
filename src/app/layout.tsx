@@ -7,6 +7,7 @@ import { CartSheet } from "@/components/cart/cart-sheet";
 import { AuthProvider } from "@/components/providers/auth-provider";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { SettingsProvider } from "@/contexts/settings-context";
+import { LanguageProvider } from "@/contexts/language-context";
 import { Toaster } from "react-hot-toast";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -27,25 +28,34 @@ export default function RootLayout({
       <body className={inter.className}>
         <ThemeProvider defaultTheme="light" storageKey="jewelry-theme">
           <AuthProvider>
-            <SettingsProvider>
-              <div className="flex min-h-screen flex-col">
-                <Navbar />
-                <main className="flex-1">{children}</main>
-                <Footer />
-              </div>
-              <CartSheet />
-              <Toaster
-                position="top-right"
-                toastOptions={{
-                  duration: 3000,
-                  style: {
-                    background: "hsl(var(--card))",
-                    color: "hsl(var(--card-foreground))",
-                    border: "1px solid hsl(var(--border))",
-                  },
-                }}
-              />
-            </SettingsProvider>
+            <LanguageProvider>
+              <SettingsProvider>
+                {/* Skip to content link for accessibility */}
+                <a href="#main-content" className="skip-to-content">
+                  Skip to main content
+                </a>
+
+                <div className="flex min-h-screen flex-col">
+                  <Navbar />
+                  <main id="main-content" className="flex-1">
+                    {children}
+                  </main>
+                  <Footer />
+                </div>
+                <CartSheet />
+                <Toaster
+                  position="top-right"
+                  toastOptions={{
+                    duration: 3000,
+                    style: {
+                      background: "hsl(var(--card))",
+                      color: "hsl(var(--card-foreground))",
+                      border: "1px solid hsl(var(--border))",
+                    },
+                  }}
+                />
+              </SettingsProvider>
+            </LanguageProvider>
           </AuthProvider>
         </ThemeProvider>
       </body>

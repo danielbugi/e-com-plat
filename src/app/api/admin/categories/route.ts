@@ -4,17 +4,20 @@ import { prisma } from "@/lib/prisma";
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+    const { name, nameEn, nameHe, slug, description, image } = body;
 
     const category = await prisma.category.create({
       data: {
-        name: body.name,
-        slug: body.slug,
-        description: body.description,
-        image: body.image,
+        name: name || nameEn, // Fallback for compatibility
+        nameEn,
+        nameHe,
+        slug,
+        description,
+        image,
       },
     });
 
-    return NextResponse.json({ category });
+    return NextResponse.json(category, { status: 201 });
   } catch (error) {
     console.error("Error creating category:", error);
     return NextResponse.json(

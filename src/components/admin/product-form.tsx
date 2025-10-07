@@ -1,14 +1,14 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -16,329 +16,302 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import toast from "react-hot-toast";
-import { Category } from "@prisma/client";
-import { ImageUpload } from "./image-upload";
 
-const productSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  slug: z.string().min(1, "Slug is required"),
-  description: z.string().optional(),
-  price: z.string().min(1, "Price is required"),
-  comparePrice: z.string().optional(),
-  categoryId: z.string().min(1, "Category is required"),
-  inventory: z.string().min(1, "Inventory is required"),
-  inStock: z.boolean(),
-  featured: z.boolean(),
-  freeShipping: z.boolean(),
-});
-
-type ProductFormData = z.infer<typeof productSchema>;
-
-interface ProductFormProps {
-  categories: Category[];
-  initialData?: any;
-  productId?: string;
+interface Category {
+  id: string;
+  name: string;
+  nameEn?: string | null;
+  nameHe?: string | null;
 }
 
-export function ProductForm({
-  categories,
-  initialData,
-  productId,
-}: ProductFormProps) {
+interface ProductFormProps {
+  product?: {
+    id: string;
+    name: string;
+    nameEn?: string | null;
+    nameHe?: string | null;
+    description?: string | null;
+    descriptionEn?: string | null;
+    descriptionHe?: string | null;
+    price: number;
+    image: string;
+    images: string[];
+    categoryId: string;
+    inStock: boolean;
+    featured: boolean;
+  };
+}
+
+export function ProductForm({ product }: ProductFormProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-  const [images, setImages] = useState<string[]>(initialData?.images || []);
-  const [mainImage, setMainImage] = useState<string>(initialData?.image || "");
+  const [categories, setCategories] = useState<Category[]>([]);
 
-  const {
-    register,
-    handleSubmit,
-    setValue,
-    watch,
-    formState: { errors },
-  } = useForm<ProductFormData>({
-    resolver: zodResolver(productSchema),
-    defaultValues: initialData
-      ? {
-          name: initialData.name,
-          slug: initialData.slug,
-          description: initialData.description || "",
-          price: initialData.price.toString(),
-          comparePrice: initialData.comparePrice?.toString() || "",
-          categoryId: initialData.categoryId,
-          inventory: initialData.inventory.toString(),
-          inStock: initialData.inStock,
-          featured: initialData.featured,
-          freeShipping: initialData.freeShipping,
-        }
-      : {
-          inStock: true,
-          featured: false,
-          freeShipping: false,
-        },
-  });
+  // English fields
+  const [nameEn, setNameEn] = useState(product?.nameEn || product?.name || "");
+  const [descriptionEn, setDescriptionEn] = useState(
+    product?.descriptionEn || product?.description || ""
+  );
 
-  const categoryId = watch("categoryId");
-  const inStock = watch("inStock");
-  const featured = watch("featured");
-  const freeShipping = watch("freeShipping");
+  // Hebrew fields
+  const [nameHe, setNameHe] = useState(product?.nameHe || "");
+  const [descriptionHe, setDescriptionHe] = useState(
+    product?.descriptionHe || ""
+  );
 
-  // Auto-generate slug from name
-  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const name = e.target.value;
-    const slug = name
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/(^-|-$)/g, "");
-    setValue("slug", slug);
-  };
+  // Common fields
+  const [price, setPrice] = useState(product?.price?.toString() || "");
+  const [image, setImage] = useState(product?.image || "");
+  const [images, setImages] = useState(product?.images?.join("\n") || "");
+  const [categoryId, setCategoryId] = useState(product?.categoryId || "");
+  const [inStock, setInStock] = useState(product?.inStock ?? true);
+  const [featured, setFeatured] = useState(product?.featured ?? false);
 
-  const onSubmit = async (data: ProductFormData) => {
-    if (images.length === 0) {
-      toast.error("Please upload at least one image");
+  useEffect(() => {
+    fetch("/api/categories")
+      .then((res) => res.json())
+      .then((data) => setCategories(data));
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!nameEn || !nameHe) {
+      toast.error("Please provide both English and Hebrew names");
       return;
     }
 
-    if (!mainImage) {
-      toast.error("Please select a main image");
+    if (!price || !categoryId) {
+      toast.error("Please fill in all required fields");
       return;
     }
-
-    console.log("Form submission - images array:", images); // Debug log
-    console.log("Form submission - images length:", images.length); // Debug log
 
     setIsLoading(true);
+
     try {
-      const url = productId
-        ? `/api/admin/products/${productId}`
+      const url = product
+        ? `/api/admin/products/${product.id}`
         : "/api/admin/products";
-      const method = productId ? "PUT" : "POST";
 
-      const payload = {
-        ...data,
-        price: parseFloat(data.price),
-        comparePrice: data.comparePrice ? parseFloat(data.comparePrice) : null,
-        inventory: parseInt(data.inventory),
-        image: mainImage,
-        images: images,
-      };
-
-      console.log("Sending payload to API:", payload); // Debug log
-      console.log("Payload images length:", payload.images.length); // Debug log
+      const imagesArray = images
+        .split("\n")
+        .map((img) => img.trim())
+        .filter((img) => img.length > 0);
 
       const response = await fetch(url, {
-        method,
+        method: product ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          name: nameEn, // Keep for backward compatibility
+          nameEn,
+          nameHe,
+          description: descriptionEn, // Keep for backward compatibility
+          descriptionEn,
+          descriptionHe,
+          price: parseFloat(price),
+          image,
+          images: imagesArray,
+          categoryId,
+          inStock,
+          featured,
+        }),
       });
 
-      if (!response.ok) throw new Error("Failed to save product");
-
-      const result = await response.json();
-      console.log("API response:", result); // Debug log
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to save product");
+      }
 
       toast.success(
-        productId
+        product
           ? "Product updated successfully"
           : "Product created successfully"
       );
       router.push("/admin/products");
       router.refresh();
-    } catch (error) {
-      console.error("Save error:", error); // Debug log
-      toast.error("Failed to save product");
+    } catch (error: any) {
+      toast.error(error.message || "Something went wrong");
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+    <form onSubmit={handleSubmit}>
       <Card>
         <CardHeader>
-          <CardTitle>Basic Information</CardTitle>
+          <CardTitle>{product ? "Edit Product" : "Create Product"}</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <Label htmlFor="name">Product Name *</Label>
-            <Input
-              id="name"
-              {...register("name")}
-              onChange={(e) => {
-                register("name").onChange(e);
-                handleNameChange(e);
-              }}
-            />
-            {errors.name && (
-              <p className="text-sm text-destructive mt-1">
-                {errors.name.message}
-              </p>
-            )}
-          </div>
+        <CardContent className="space-y-6">
+          <Tabs defaultValue="en" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="en">English</TabsTrigger>
+              <TabsTrigger value="he">עברית</TabsTrigger>
+            </TabsList>
 
-          <div>
-            <Label htmlFor="slug">Slug *</Label>
-            <Input id="slug" {...register("slug")} />
-            {errors.slug && (
-              <p className="text-sm text-destructive mt-1">
-                {errors.slug.message}
-              </p>
-            )}
-          </div>
+            {/* English Tab */}
+            <TabsContent value="en" className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="nameEn">
+                  Product Name (English) <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="nameEn"
+                  value={nameEn}
+                  onChange={(e) => setNameEn(e.target.value)}
+                  placeholder="Sterling Silver Ring"
+                  required
+                />
+              </div>
 
-          <div>
-            <Label htmlFor="description">Description</Label>
-            <Textarea id="description" {...register("description")} rows={4} />
-          </div>
+              <div className="space-y-2">
+                <Label htmlFor="descriptionEn">Description (English)</Label>
+                <Textarea
+                  id="descriptionEn"
+                  value={descriptionEn}
+                  onChange={(e) => setDescriptionEn(e.target.value)}
+                  placeholder="Handcrafted sterling silver ring..."
+                  rows={4}
+                />
+              </div>
+            </TabsContent>
 
-          <div>
-            <Label htmlFor="categoryId">Category *</Label>
-            <Select
-              value={categoryId}
-              onValueChange={(value) => setValue("categoryId", value)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select a category" />
-              </SelectTrigger>
-              <SelectContent>
-                {categories.map((category) => (
-                  <SelectItem key={category.id} value={category.id}>
-                    {category.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {errors.categoryId && (
-              <p className="text-sm text-destructive mt-1">
-                {errors.categoryId.message}
-              </p>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+            {/* Hebrew Tab */}
+            <TabsContent value="he" className="space-y-4" dir="rtl">
+              <div className="space-y-2">
+                <Label htmlFor="nameHe">
+                  שם המוצר (עברית) <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="nameHe"
+                  value={nameHe}
+                  onChange={(e) => setNameHe(e.target.value)}
+                  placeholder="טבעת כסף סטרלינג"
+                  required
+                  dir="rtl"
+                />
+              </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Pricing & Inventory</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="price">Price *</Label>
+              <div className="space-y-2">
+                <Label htmlFor="descriptionHe">תיאור (עברית)</Label>
+                <Textarea
+                  id="descriptionHe"
+                  value={descriptionHe}
+                  onChange={(e) => setDescriptionHe(e.target.value)}
+                  placeholder="טבעת כסף סטרלינג בעבודת יד..."
+                  rows={4}
+                  dir="rtl"
+                />
+              </div>
+            </TabsContent>
+          </Tabs>
+
+          {/* Common Fields */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="price">
+                Price (₪) <span className="text-red-500">*</span>
+              </Label>
               <Input
                 id="price"
                 type="number"
                 step="0.01"
-                {...register("price")}
+                value={price}
+                onChange={(e) => setPrice(e.target.value)}
+                placeholder="299.99"
+                required
               />
-              {errors.price && (
-                <p className="text-sm text-destructive mt-1">
-                  {errors.price.message}
-                </p>
-              )}
             </div>
 
-            <div>
-              <Label htmlFor="comparePrice">Compare Price</Label>
-              <Input
-                id="comparePrice"
-                type="number"
-                step="0.01"
-                {...register("comparePrice")}
-              />
+            <div className="space-y-2">
+              <Label htmlFor="category">
+                Category <span className="text-red-500">*</span>
+              </Label>
+              <Select value={categoryId} onValueChange={setCategoryId} required>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map((category) => (
+                    <SelectItem key={category.id} value={category.id}>
+                      {category.nameEn || category.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
-          <div>
-            <Label htmlFor="inventory">Inventory *</Label>
-            <Input id="inventory" type="number" {...register("inventory")} />
-            {errors.inventory && (
-              <p className="text-sm text-destructive mt-1">
-                {errors.inventory.message}
-              </p>
+          <div className="space-y-2">
+            <Label htmlFor="image">
+              Main Image URL <span className="text-red-500">*</span>
+            </Label>
+            <Input
+              id="image"
+              value={image}
+              onChange={(e) => setImage(e.target.value)}
+              placeholder="/images/products/ring-1.jpg"
+              required
+            />
+            {image && (
+              <img
+                src={image}
+                alt="Preview"
+                className="mt-2 w-32 h-32 object-cover rounded"
+              />
             )}
           </div>
-        </CardContent>
-      </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Product Images</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ImageUpload
-            images={images}
-            mainImage={mainImage}
-            onImagesChange={setImages}
-            onMainImageChange={setMainImage}
-          />
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Options</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              id="inStock"
-              checked={inStock}
-              onChange={(e) => setValue("inStock", e.target.checked)}
-              className="rounded"
+          <div className="space-y-2">
+            <Label htmlFor="images">Additional Images (one per line)</Label>
+            <Textarea
+              id="images"
+              value={images}
+              onChange={(e) => setImages(e.target.value)}
+              placeholder="/images/products/ring-1.jpg&#10;/images/products/ring-2.jpg"
+              rows={4}
             />
-            <Label htmlFor="inStock" className="cursor-pointer">
-              In Stock
-            </Label>
           </div>
 
-          <div className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              id="featured"
-              checked={featured}
-              onChange={(e) => setValue("featured", e.target.checked)}
-              className="rounded"
-            />
-            <Label htmlFor="featured" className="cursor-pointer">
-              Featured Product
-            </Label>
+          <div className="flex items-center gap-8">
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="inStock"
+                checked={inStock}
+                onCheckedChange={setInStock}
+              />
+              <Label htmlFor="inStock">In Stock</Label>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="featured"
+                checked={featured}
+                onCheckedChange={setFeatured}
+              />
+              <Label htmlFor="featured">Featured</Label>
+            </div>
           </div>
 
-          <div className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              id="freeShipping"
-              checked={freeShipping}
-              onChange={(e) => setValue("freeShipping", e.target.checked)}
-              className="rounded"
-            />
-            <Label htmlFor="freeShipping" className="cursor-pointer">
-              Free Shipping
-            </Label>
+          <div className="flex gap-4">
+            <Button type="submit" disabled={isLoading}>
+              {isLoading
+                ? "Saving..."
+                : product
+                ? "Update Product"
+                : "Create Product"}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => router.push("/admin/products")}
+            >
+              Cancel
+            </Button>
           </div>
         </CardContent>
       </Card>
-
-      <div className="flex justify-end gap-4">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => router.push("/admin/products")}
-        >
-          Cancel
-        </Button>
-        <Button type="submit" disabled={isLoading}>
-          {isLoading
-            ? "Saving..."
-            : productId
-            ? "Update Product"
-            : "Create Product"}
-        </Button>
-      </div>
     </form>
   );
 }
