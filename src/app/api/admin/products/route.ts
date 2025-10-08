@@ -1,5 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+// src/app/api/admin/products/route.ts
+import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
 
 export async function GET() {
   try {
@@ -8,7 +9,7 @@ export async function GET() {
         category: true,
       },
       orderBy: {
-        createdAt: "desc",
+        createdAt: 'desc',
       },
     });
 
@@ -16,13 +17,14 @@ export async function GET() {
     const productsData = products.map((product) => ({
       ...product,
       price: product.price.toNumber(),
+      comparePrice: product.comparePrice?.toNumber() || null,
     }));
 
     return NextResponse.json(productsData);
   } catch (error) {
-    console.error("Error fetching products:", error);
+    console.error('Error fetching products:', error);
     return NextResponse.json(
-      { error: "Failed to fetch products" },
+      { error: 'Failed to fetch products' },
       { status: 500 }
     );
   }
@@ -40,6 +42,7 @@ export async function POST(request: NextRequest) {
       descriptionEn,
       descriptionHe,
       price,
+      comparePrice,
       image,
       images,
       categoryId,
@@ -47,11 +50,12 @@ export async function POST(request: NextRequest) {
       featured,
     } = body;
 
-    console.log("Received product data:", {
+    console.log('Received product data:', {
       nameEn,
       nameHe,
       slug,
       price,
+      comparePrice,
       categoryId,
       image,
       hasImages: !!images,
@@ -59,17 +63,17 @@ export async function POST(request: NextRequest) {
 
     // Validate required fields
     const missingFields = [];
-    if (!nameEn) missingFields.push("nameEn");
-    if (!nameHe) missingFields.push("nameHe");
-    if (!slug) missingFields.push("slug");
-    if (!price) missingFields.push("price");
-    if (!categoryId) missingFields.push("categoryId");
-    if (!image) missingFields.push("image");
+    if (!nameEn) missingFields.push('nameEn');
+    if (!nameHe) missingFields.push('nameHe');
+    if (!slug) missingFields.push('slug');
+    if (!price) missingFields.push('price');
+    if (!categoryId) missingFields.push('categoryId');
+    if (!image) missingFields.push('image');
 
     if (missingFields.length > 0) {
-      console.error("Missing required fields:", missingFields);
+      console.error('Missing required fields:', missingFields);
       return NextResponse.json(
-        { error: `Missing required fields: ${missingFields.join(", ")}` },
+        { error: `Missing required fields: ${missingFields.join(', ')}` },
         { status: 400 }
       );
     }
@@ -81,14 +85,14 @@ export async function POST(request: NextRequest) {
 
     if (existingProduct) {
       return NextResponse.json(
-        { error: "A product with this slug already exists" },
+        { error: 'A product with this slug already exists' },
         { status: 400 }
       );
     }
 
     const product = await prisma.product.create({
       data: {
-        name: name || nameEn, // Fallback for compatibility
+        name: name || nameEn,
         nameEn,
         nameHe,
         slug,
@@ -96,6 +100,7 @@ export async function POST(request: NextRequest) {
         descriptionEn,
         descriptionHe,
         price,
+        comparePrice: comparePrice || null,
         image,
         images: images || [],
         categoryId,
@@ -108,13 +113,14 @@ export async function POST(request: NextRequest) {
     const productData = {
       ...product,
       price: product.price.toNumber(),
+      comparePrice: product.comparePrice?.toNumber() || null,
     };
 
     return NextResponse.json(productData, { status: 201 });
   } catch (error) {
-    console.error("Error creating product:", error);
+    console.error('Error creating product:', error);
     return NextResponse.json(
-      { error: "Failed to create product" },
+      { error: 'Failed to create product' },
       { status: 500 }
     );
   }

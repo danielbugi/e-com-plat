@@ -1,5 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+// src/app/api/admin/products/[id]/route.ts
+import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
 
 export async function GET(
   request: NextRequest,
@@ -14,20 +15,21 @@ export async function GET(
     });
 
     if (!product) {
-      return NextResponse.json({ error: "Product not found" }, { status: 404 });
+      return NextResponse.json({ error: 'Product not found' }, { status: 404 });
     }
 
     // Convert Decimal to number for JSON serialization
     const productData = {
       ...product,
       price: product.price.toNumber(),
+      comparePrice: product.comparePrice?.toNumber() || null,
     };
 
     return NextResponse.json(productData);
   } catch (error) {
-    console.error("Error fetching product:", error);
+    console.error('Error fetching product:', error);
     return NextResponse.json(
-      { error: "Failed to fetch product" },
+      { error: 'Failed to fetch product' },
       { status: 500 }
     );
   }
@@ -48,6 +50,7 @@ export async function PUT(
       descriptionEn,
       descriptionHe,
       price,
+      comparePrice,
       image,
       images,
       categoryId,
@@ -61,7 +64,7 @@ export async function PUT(
     });
 
     if (!existingProduct) {
-      return NextResponse.json({ error: "Product not found" }, { status: 404 });
+      return NextResponse.json({ error: 'Product not found' }, { status: 404 });
     }
 
     // Check if slug is being changed and if it's already taken
@@ -72,7 +75,7 @@ export async function PUT(
 
       if (slugExists) {
         return NextResponse.json(
-          { error: "Slug already exists" },
+          { error: 'Slug already exists' },
           { status: 400 }
         );
       }
@@ -81,7 +84,7 @@ export async function PUT(
     const product = await prisma.product.update({
       where: { id: params.id },
       data: {
-        name: name || nameEn, // Fallback for compatibility
+        name: name || nameEn,
         nameEn,
         nameHe,
         slug,
@@ -89,6 +92,7 @@ export async function PUT(
         descriptionEn,
         descriptionHe,
         price,
+        comparePrice: comparePrice || null,
         image,
         images,
         categoryId,
@@ -101,13 +105,14 @@ export async function PUT(
     const productData = {
       ...product,
       price: product.price.toNumber(),
+      comparePrice: product.comparePrice?.toNumber() || null,
     };
 
     return NextResponse.json(productData);
   } catch (error) {
-    console.error("Error updating product:", error);
+    console.error('Error updating product:', error);
     return NextResponse.json(
-      { error: "Failed to update product" },
+      { error: 'Failed to update product' },
       { status: 500 }
     );
   }
@@ -124,18 +129,18 @@ export async function DELETE(
     });
 
     if (!product) {
-      return NextResponse.json({ error: "Product not found" }, { status: 404 });
+      return NextResponse.json({ error: 'Product not found' }, { status: 404 });
     }
 
     await prisma.product.delete({
       where: { id: params.id },
     });
 
-    return NextResponse.json({ message: "Product deleted successfully" });
+    return NextResponse.json({ message: 'Product deleted successfully' });
   } catch (error) {
-    console.error("Error deleting product:", error);
+    console.error('Error deleting product:', error);
     return NextResponse.json(
-      { error: "Failed to delete product" },
+      { error: 'Failed to delete product' },
       { status: 500 }
     );
   }

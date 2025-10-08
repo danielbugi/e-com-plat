@@ -1,15 +1,16 @@
-"use client";
+// src/components/admin/category-form.tsx
+'use client';
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ImageUpload } from "@/components/admin/image-upload";
-import toast from "react-hot-toast";
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ImageUploader } from '@/components/admin/image-uploader';
+import toast from 'react-hot-toast';
 
 interface CategoryFormProps {
   initialData?: {
@@ -29,30 +30,27 @@ export function CategoryForm({ initialData, categoryId }: CategoryFormProps) {
   const [isLoading, setIsLoading] = useState(false);
 
   // English fields
-  const [nameEn, setNameEn] = useState(initialData?.nameEn || "");
-  const [slug, setSlug] = useState(initialData?.slug || "");
+  const [nameEn, setNameEn] = useState(
+    initialData?.nameEn || initialData?.name || ''
+  );
+  const [slug, setSlug] = useState(initialData?.slug || '');
   const [descriptionEn, setDescriptionEn] = useState(
-    initialData?.description || ""
+    initialData?.description || ''
   );
 
   // Hebrew fields
-  const [nameHe, setNameHe] = useState(initialData?.nameHe || "");
-  const [descriptionHe, setDescriptionHe] = useState(
-    initialData?.description || ""
-  );
+  const [nameHe, setNameHe] = useState(initialData?.nameHe || '');
+  const [descriptionHe, setDescriptionHe] = useState('');
 
-  // Image management - using array for compatibility with ImageUpload component
-  const [images, setImages] = useState<string[]>(
-    initialData?.image ? [initialData.image] : []
-  );
-  const [mainImage, setMainImage] = useState<string>(initialData?.image || "");
+  // Image
+  const [image, setImage] = useState<string>(initialData?.image || '');
 
   // Auto-generate slug from English name
   const generateSlug = (name: string) => {
     return name
       .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/(^-|-$)/g, "");
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '');
   };
 
   const handleNameEnChange = (value: string) => {
@@ -66,12 +64,12 @@ export function CategoryForm({ initialData, categoryId }: CategoryFormProps) {
     e.preventDefault();
 
     if (!nameEn || !nameHe) {
-      toast.error("Please provide both English and Hebrew names");
+      toast.error('Please provide both English and Hebrew names');
       return;
     }
 
     if (!slug) {
-      toast.error("Slug is required");
+      toast.error('Slug is required');
       return;
     }
 
@@ -80,37 +78,37 @@ export function CategoryForm({ initialData, categoryId }: CategoryFormProps) {
     try {
       const url = categoryId
         ? `/api/admin/categories/${categoryId}`
-        : "/api/admin/categories";
+        : '/api/admin/categories';
+
+      const payload = {
+        name: nameEn,
+        nameEn,
+        nameHe,
+        slug,
+        description: descriptionEn,
+        image: image || null,
+      };
 
       const response = await fetch(url, {
-        method: categoryId ? "PUT" : "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: nameEn,
-          nameEn,
-          nameHe,
-          slug,
-          description: descriptionEn || "",
-          descriptionEn: descriptionEn || "",
-          descriptionHe: descriptionHe || "",
-          image: mainImage || null,
-        }),
+        method: categoryId ? 'PUT' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || "Failed to save category");
+        throw new Error(error.error || 'Failed to save category');
       }
 
       toast.success(
         categoryId
-          ? "Category updated successfully"
-          : "Category created successfully"
+          ? 'Category updated successfully'
+          : 'Category created successfully'
       );
-      router.push("/admin/categories");
+      router.push('/admin/categories');
       router.refresh();
     } catch (error: any) {
-      toast.error(error.message || "Something went wrong");
+      toast.error(error.message || 'Something went wrong');
     } finally {
       setIsLoading(false);
     }
@@ -118,125 +116,138 @@ export function CategoryForm({ initialData, categoryId }: CategoryFormProps) {
 
   return (
     <form onSubmit={handleSubmit}>
-      <Card>
-        <CardHeader>
-          <CardTitle>
-            {categoryId ? "Edit Category" : "Create Category"}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <Tabs defaultValue="en" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="en">English</TabsTrigger>
-              <TabsTrigger value="he">עברית</TabsTrigger>
-            </TabsList>
+      <div className="space-y-6">
+        {/* Basic Information Card */}
+        <Card>
+          <CardHeader>
+            <CardTitle>
+              {categoryId ? 'Edit Category' : 'Create Category'}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <Tabs defaultValue="en" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="en">English</TabsTrigger>
+                <TabsTrigger value="he">עברית</TabsTrigger>
+              </TabsList>
 
-            {/* English Tab */}
-            <TabsContent value="en" className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="nameEn">
-                  Category Name (English){" "}
-                  <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  id="nameEn"
-                  value={nameEn}
-                  onChange={(e) => handleNameEnChange(e.target.value)}
-                  placeholder="Rings"
-                  required
-                />
-              </div>
+              {/* English Tab */}
+              <TabsContent value="en" className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="nameEn">
+                    Category Name (English){' '}
+                    <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="nameEn"
+                    value={nameEn}
+                    onChange={(e) => handleNameEnChange(e.target.value)}
+                    placeholder="Rings"
+                    required
+                  />
+                </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="slug">
-                  Slug <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  id="slug"
-                  value={slug}
-                  onChange={(e) => setSlug(e.target.value)}
-                  placeholder="rings"
-                  required
-                />
-                <p className="text-xs text-muted-foreground">
-                  URL-friendly name (auto-generated from English name)
-                </p>
-              </div>
+                <div className="space-y-2">
+                  <Label htmlFor="descriptionEn">Description (English)</Label>
+                  <Textarea
+                    id="descriptionEn"
+                    value={descriptionEn}
+                    onChange={(e) => setDescriptionEn(e.target.value)}
+                    placeholder="Premium handcrafted rings for every occasion"
+                    rows={3}
+                  />
+                </div>
+              </TabsContent>
 
-              <div className="space-y-2">
-                <Label htmlFor="descriptionEn">Description (English)</Label>
-                <Textarea
-                  id="descriptionEn"
-                  value={descriptionEn}
-                  onChange={(e) => setDescriptionEn(e.target.value)}
-                  placeholder="Handcrafted rings for every occasion"
-                  rows={3}
-                />
-              </div>
-            </TabsContent>
+              {/* Hebrew Tab */}
+              <TabsContent value="he" className="space-y-4" dir="rtl">
+                <div className="space-y-2">
+                  <Label htmlFor="nameHe">
+                    שם הקטגוריה (עברית) <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="nameHe"
+                    value={nameHe}
+                    onChange={(e) => setNameHe(e.target.value)}
+                    placeholder="טבעות"
+                    required
+                    dir="rtl"
+                  />
+                </div>
 
-            {/* Hebrew Tab */}
-            <TabsContent value="he" className="space-y-4" dir="rtl">
-              <div className="space-y-2">
-                <Label htmlFor="nameHe">
-                  שם הקטגוריה (עברית) <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  id="nameHe"
-                  value={nameHe}
-                  onChange={(e) => setNameHe(e.target.value)}
-                  placeholder="טבעות"
-                  required
-                  dir="rtl"
-                />
-              </div>
+                <div className="space-y-2">
+                  <Label htmlFor="descriptionHe">תיאור (עברית)</Label>
+                  <Textarea
+                    id="descriptionHe"
+                    value={descriptionHe}
+                    onChange={(e) => setDescriptionHe(e.target.value)}
+                    placeholder="טבעות בעבודת יד איכותיות לכל אירוע"
+                    rows={3}
+                    dir="rtl"
+                  />
+                </div>
+              </TabsContent>
+            </Tabs>
 
-              <div className="space-y-2">
-                <Label htmlFor="descriptionHe">תיאור (עברית)</Label>
-                <Textarea
-                  id="descriptionHe"
-                  value={descriptionHe}
-                  onChange={(e) => setDescriptionHe(e.target.value)}
-                  placeholder="טבעות בעבודת יד לכל אירוע"
-                  rows={3}
-                  dir="rtl"
-                />
-              </div>
-            </TabsContent>
-          </Tabs>
+            <div className="space-y-2">
+              <Label htmlFor="slug">
+                Slug <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="slug"
+                value={slug}
+                onChange={(e) => setSlug(e.target.value)}
+                placeholder="rings"
+                required
+              />
+              <p className="text-xs text-muted-foreground">
+                URL-friendly name (auto-generated from category name)
+              </p>
+            </div>
+          </CardContent>
+        </Card>
 
-          {/* Image Upload Section */}
-          <div className="space-y-2">
-            <Label>Category Image</Label>
-            <p className="text-sm text-muted-foreground mb-2">
-              Upload a single image for this category
-            </p>
-            <ImageUpload
-              images={images}
-              mainImage={mainImage}
-              onImagesChange={setImages}
-              onMainImageChange={setMainImage}
-            />
-          </div>
+        {/* Category Image Card */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Category Image (Optional)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground">
+                Upload an image to represent this category
+              </p>
+              <ImageUploader
+                value={image}
+                onChange={setImage}
+                onRemove={() => setImage('')}
+                disabled={isLoading}
+                label="Upload Category Image"
+                folder="categories"
+              />
+            </div>
+          </CardContent>
+        </Card>
 
-          <div className="flex gap-4">
-            <Button type="submit" disabled={isLoading}>
-              {isLoading
-                ? "Saving..."
-                : categoryId
-                ? "Update Category"
-                : "Create Category"}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => router.push("/admin/categories")}
-            >
-              Cancel
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+        {/* Action Buttons */}
+        <div className="flex gap-4">
+          <Button type="submit" disabled={isLoading}>
+            {isLoading
+              ? 'Saving...'
+              : categoryId
+              ? 'Update Category'
+              : 'Create Category'}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => router.push('/admin/categories')}
+            disabled={isLoading}
+          >
+            Cancel
+          </Button>
+        </div>
+      </div>
     </form>
   );
 }
