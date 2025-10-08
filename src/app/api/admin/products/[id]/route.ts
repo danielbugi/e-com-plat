@@ -1,4 +1,3 @@
-// src/app/api/admin/products/[id]/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
@@ -22,7 +21,7 @@ export async function GET(
     const productData = {
       ...product,
       price: product.price.toNumber(),
-      comparePrice: product.comparePrice?.toNumber() || null,
+      comparePrice: product.comparePrice?.toNumber() ?? null,
     };
 
     return NextResponse.json(productData);
@@ -84,7 +83,7 @@ export async function PUT(
     const product = await prisma.product.update({
       where: { id: params.id },
       data: {
-        name: name || nameEn,
+        name: name || nameEn, // Fallback for compatibility
         nameEn,
         nameHe,
         slug,
@@ -105,7 +104,7 @@ export async function PUT(
     const productData = {
       ...product,
       price: product.price.toNumber(),
-      comparePrice: product.comparePrice?.toNumber() || null,
+      comparePrice: product.comparePrice?.toNumber() ?? null,
     };
 
     return NextResponse.json(productData);

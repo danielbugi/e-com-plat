@@ -1,4 +1,3 @@
-// src/app/api/admin/products/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
@@ -17,7 +16,7 @@ export async function GET() {
     const productsData = products.map((product) => ({
       ...product,
       price: product.price.toNumber(),
-      comparePrice: product.comparePrice?.toNumber() || null,
+      comparePrice: product.comparePrice?.toNumber() ?? null,
     }));
 
     return NextResponse.json(productsData);
@@ -92,7 +91,7 @@ export async function POST(request: NextRequest) {
 
     const product = await prisma.product.create({
       data: {
-        name: name || nameEn,
+        name: name || nameEn, // Fallback for compatibility
         nameEn,
         nameHe,
         slug,
@@ -113,7 +112,7 @@ export async function POST(request: NextRequest) {
     const productData = {
       ...product,
       price: product.price.toNumber(),
-      comparePrice: product.comparePrice?.toNumber() || null,
+      comparePrice: product.comparePrice?.toNumber() ?? null,
     };
 
     return NextResponse.json(productData, { status: 201 });
