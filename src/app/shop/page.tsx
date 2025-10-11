@@ -43,9 +43,9 @@ export default async function ShopPage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
-      <section className="bg-gradient-steel text-white py-20">
+      <section className=" text-white py-20">
         <div className="container px-4 mx-auto text-center">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">
+          <h1 className="text-4xl md:text-5xl font-bold mb-4 ">
             Our Collection
           </h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">

@@ -16,7 +16,7 @@
     --secondary-foreground: 222 47% 11%;
     --muted: 210 40% 96.1%;
     --muted-foreground: 215 16.3% 46.9%;
-    --accent: 43 74% 49%;
+    --accent: 43 58% 59%;
     --accent-foreground: 222 47% 11%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
@@ -29,9 +29,9 @@
   .dark {
     --background: 222 47% 11%;
     --foreground: 210 40% 98%;
-    --card: 222 47% 11%;
+    --card: 217 33% 17%;
     --card-foreground: 210 40% 98%;
-    --popover: 222 47% 11%;
+    --popover: 217 33% 17%;
     --popover-foreground: 210 40% 98%;
     --primary: 210 40% 98%;
     --primary-foreground: 222 47% 11%;
@@ -39,7 +39,7 @@
     --secondary-foreground: 210 40% 98%;
     --muted: 217 33% 17%;
     --muted-foreground: 215 20% 65%;
-    --accent: 43 74% 49%;
+    --accent: 43 58% 59%;
     --accent-foreground: 222 47% 11%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
@@ -56,43 +56,86 @@
 
   body {
     @apply bg-background text-foreground;
+    font-family: 'Rubik', system-ui, sans-serif;
+    font-feature-settings: 'rlig' 1, 'calt' 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
-  /* Fix heading colors */
+  /* Luxury Typography - Serif fonts for headings */
   h1,
   h2,
   h3,
   h4,
   h5,
   h6 {
-    @apply text-foreground;
-    font-weight: 700;
+    @apply text-foreground font-sans;
+    /* font-weight: 700; */
+    letter-spacing: 0.05em;
+    line-height: 1.2;
+    text-transform: uppercase;
   }
 
   h1 {
     @apply text-4xl md:text-5xl lg:text-6xl;
+    font-weight: 600;
+    text-transform: uppercase;
   }
 
   h2 {
-    @apply text-3xl md:text-4xl;
+    @apply text-3xl md:text-4xl lg:text-5xl;
+    font-weight: 500;
+    text-transform: uppercase;
   }
 
   h3 {
-    @apply text-2xl md:text-3xl;
+    @apply text-2xl md:text-3xl lg:text-4xl;
+    font-weight: 500;
+    text-transform: uppercase;
   }
 
   h4 {
-    @apply text-xl md:text-2xl;
+    @apply text-xl md:text-2xl lg:text-3xl;
+    font-weight: 400;
+    text-transform: uppercase;
   }
 
   h5 {
-    @apply text-lg md:text-xl;
+    @apply text-lg md:text-xl lg:text-2xl;
+    font-weight: 400;
+    text-transform: uppercase;
   }
 
   h6 {
-    @apply text-base md:text-lg;
+    @apply text-base md:text-lg lg:text-xl;
+    font-weight: 400;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    font-family: 'Rubik', system-ui, sans-serif; /* Use BBH Sans for h6 labels */
+  }
+
+  /* Body text optimization */
+  p {
+    @apply leading-relaxed;
+    /* font-weight: 200; */
+    font-family: 'open-sans', system-ui, sans-serif;
+  }
+
+  a {
+    @apply text-accent hover:text-accent-foreground transition-colors;
+    font-family: 'open-sans', system-ui, sans-serif;
+  }
+  span {
+    font-family: 'open-sans', system-ui, sans-serif;
+  }
+
+  /* Skip to content link for accessibility */
+  .skip-to-content {
+    @apply sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50;
+    @apply bg-accent text-accent-foreground px-4 py-2 rounded-md font-medium;
   }
 }
+
 @layer components {
   /* Button on dark background variant */
   .btn-on-dark {
@@ -105,90 +148,102 @@
     background: hsl(var(--accent) / 0.1);
     border-color: hsl(var(--accent));
   }
+
+  /* Luxury gradient backgrounds */
+  .bg-gradient-steel {
+    background: linear-gradient(135deg, #1a1d23 0%, #2d3748 100%);
+  }
+
+  .bg-gradient-gold {
+    background: linear-gradient(135deg, #d4a574 0%, #b8860b 100%);
+  }
+
+  .bg-gradient-luxury {
+    background: linear-gradient(135deg, #0d1117 0%, #2d3748 50%, #1a1d23 100%);
+  }
+
+  /* Shimmer effect for loading states */
+  .shimmer {
+    background: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.2) 50%,
+      rgba(255, 255, 255, 0) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
+  }
+
+  /* Elegant hover effects */
+  .hover-lift {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .hover-lift:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+  }
+
+  /* Image overlay effects */
+  .image-overlay {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .image-overlay::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0) 0%,
+      rgba(0, 0, 0, 0.7) 100%
+    );
+    opacity: 0.6;
+    transition: opacity 0.3s ease;
+  }
+
+  .image-overlay:hover::after {
+    opacity: 0.8;
+  }
 }
 
 /* RTL Support */
-[dir="rtl"] {
+[dir='rtl'] {
   direction: rtl;
   text-align: right;
 }
 
-[dir="ltr"] {
+[dir='ltr'] {
   direction: ltr;
   text-align: left;
 }
 
 /* RTL-specific adjustments */
-[dir="rtl"] .flex-row {
+[dir='rtl'] .flex-row {
   flex-direction: row-reverse;
 }
 
-[dir="rtl"] .space-x-reverse > :not([hidden]) ~ :not([hidden]) {
+[dir='rtl'] .space-x-reverse > :not([hidden]) ~ :not([hidden]) {
   --tw-space-x-reverse: 1;
 }
 
-/* Hebrew font support */
-[dir="rtl"] {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-    "Helvetica Neue", Arial, "Noto Sans Hebrew", sans-serif;
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
 }
 
-/* Ensure proper spacing in RTL */
-[dir="rtl"] .gap-x-4 {
-  gap: 0 1rem;
+/* Selection color */
+::selection {
+  background-color: hsl(var(--accent) / 0.3);
+  color: hsl(var(--foreground));
 }
 
-[dir="rtl"] .gap-x-2 {
-  gap: 0 0.5rem;
-}
-
-/* Fix margins in RTL */
-[dir="rtl"] .mr-2 {
-  margin-right: 0;
-  margin-left: 0.5rem;
-}
-
-[dir="rtl"] .ml-2 {
-  margin-left: 0;
-  margin-right: 0.5rem;
-}
-
-/* Accessibility improvements */
-*:focus-visible {
+/* Focus visible styles */
+:focus-visible {
   outline: 2px solid hsl(var(--accent));
   outline-offset: 2px;
-}
-
-/* Skip to content link for screen readers */
-.skip-to-content {
-  position: absolute;
-  top: -40px;
-  left: 0;
-  background: hsl(var(--accent));
-  color: hsl(var(--accent-foreground));
-  padding: 8px;
-  z-index: 100;
-  text-decoration: none;
-}
-
-.skip-to-content:focus {
-  top: 0;
-}
-
-/* High contrast mode support */
-@media (prefers-contrast: high) {
-  * {
-    border-color: currentColor !important;
-  }
-}
-
-/* Reduced motion support */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
 }
